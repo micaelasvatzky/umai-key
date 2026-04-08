@@ -9,16 +9,99 @@
 ### API (Application Programming Interface)
 Conjunto de reglas que permite que dos sistemas se comuniquen. En el contexto web, es el "contrato" entre el frontend (dashboard) y una fuente de datos (Sheets).
 
-### AppScript / Google AppScript
-Plataforma de Google para automatizar y extender sus productos (Sheets, Forms, Drive) con JavaScript. En este proyecto se usa para conectar el Google Form con el Google Sheets.
+### Apps Script / Google Apps Script
+Plataforma de Google para automatizar y extender sus productos (Sheets, Forms, Drive, Gmail) usando JavaScript. **No requiere instalar nada** — se programa desde el navegador.
 
-**Ejemplo de uso:**
+#### ¿Qué es?
+Es como "JavaScript" pero sabe comunicarse directamente con los productos de Google:
+- Leer/escribir en Sheets
+- Enviar emails por Gmail
+- Modificar Forms
+- Acceder a Drive
+
+#### ¿Para qué se usa en UMAI-Key?
+1. **Conectar Form → Sheets**: Cuando alguien envía el form, Apps Script guarda los datos en el Sheet
+2. **Validaciones**: Verificar legajos contra una base de datos
+3. **Notificaciones**: Enviar email al Padrino cuando alguien de mantenimiento pide llave
+4. **Actualizar estados**: Marcar solicitudes como "Cerradas" cuando se devuelve
+
+#### Conceptos clave
+
+| Concepto | Qué hace |
+|----------|----------|
+| **Trigger** | Un "escuchador" que detecta cuándo ocurrió algo (ej: se envió un form) |
+| **onFormSubmit()** | La función que se ejecuta automáticamente al enviar el formulario |
+| **SpreadsheetApp** | Clase para abrir y manipular Sheets |
+| **MailApp** | Clase para enviar emails |
+
+#### Cómo acceder
+1. Abrir el Google Form o Sheet
+2. Click en **⋮ (tres puntos)** → **Editor de Apps Script**
+3. Se abre un editor en el navegador (como VS Code pero más simple)
+
+#### Estructura del código
+
 ```javascript
+// Esta función se ejecuta cuando alguien envía el formulario
 function onFormSubmit(e) {
-  const sheet = SpreadsheetApp.openById('ID').getSheetByName('Solicitudes');
-  sheet.appendRow([new Date(), e.response.getRespondentEmail()]);
+  
+  // 1. Obtener la respuesta del form
+  var respuesta = e.response;
+  
+  // 2. Extraer los datos de cada pregunta (por índice)
+  var nombre = respuesta.getResponse()[0];  // Pregunta 1
+  var legajo = respuesta.getResponse()[1];   // Pregunta 2
+  var sector = respuesta.getResponse()[2];  // Pregunta 3
+  var tipo = respuesta.getResponse()[3];    // Pregunta 4
+  var motivo = respuesta.getResponse()[4];  // Pregunta 5
+  var accion = respuesta.getResponse()[5];  // Pregunta 6
+  
+  // 3. Abrir el Sheet destino
+  var sheet = SpreadsheetApp
+    .openById('AQUI_VA_EL_ID_DEL_SHEET')
+    .getSheetByName('Solicitudes');
+  
+  // 4. Guardar la fila
+  sheet.appendRow([
+    new Date(),   // Timestamp automático
+    nombre,
+    legajo,
+    sector,
+    tipo,
+    '',          // Padrino (se llena si es mantenimiento)
+    motivo,
+    accion,
+    'Activo'     // Estado inicial
+  ]);
+  
+  // 5. (Opcional) Enviar email si es mantenimiento
+  if (tipo === 'Mantenimiento') {
+    MailApp.sendEmail({
+      to: 'direccion.mantenimiento@umai.edu.ar',
+      subject: 'Nueva solicitud de llave - Mantenimiento',
+      body: nombre + ' solicitó acceso a ' + sector + '. Legajo: ' + legajo
+    });
+  }
 }
 ```
+
+#### Cómo configurar el Trigger
+1. En el editor de Apps Script, click en **⚡ (Triggers)** en el menú lateral izquierdo
+2. Click en **"+ Añadir trigger"**
+3. Configurar:
+   - Función: `onFormSubmit`
+   - Implementación: `onFormSubmit`
+   - Evento: **Al enviar el formulario**
+
+#### Limitaciones en Google Forms nativo
+| Lo que querés hacer | ¿Se puede? |
+|---------------------|------------|
+| Poblar dropdown desde Sheet | ✅ Sí |
+| Validar legajo contra DB | ⚠️ Solo post-envío (no en tiempo real) |
+| Rechazar envío si no es válido | ❌ No directamente |
+| Mensaje de error por campo | ❌ No |
+
+> **Nota**: Para validación en tiempo real se necesitaría un formulario web custom ( Apps Script como Web App), pero eso es más complejo y está en el roadmap del **Camino B**.
 
 ---
 
