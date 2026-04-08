@@ -1,0 +1,221 @@
+# GLOSARIO — UMAI-Key
+
+> Términos técnicos y acrónimos del proyecto. Agregar acá cualquier término nuevo que surja.
+
+---
+
+## A
+
+### API (Application Programming Interface)
+Conjunto de reglas que permite que dos sistemas se comuniquen. En el contexto web, es el "contrato" entre el frontend (dashboard) y una fuente de datos (Sheets).
+
+### AppScript / Google AppScript
+Plataforma de Google para automatizar y extender sus productos (Sheets, Forms, Drive) con JavaScript. En este proyecto se usa para conectar el Google Form con el Google Sheets.
+
+**Ejemplo de uso:**
+```javascript
+function onFormSubmit(e) {
+  const sheet = SpreadsheetApp.openById('ID').getSheetByName('Solicitudes');
+  sheet.appendRow([new Date(), e.response.getRespondentEmail()]);
+}
+```
+
+---
+
+## D
+
+### Dashboard
+Pantalla o aplicación que muestra datos de forma visual y organizada. En este proyecto: el panel que ve Seguridad con las llaves prestadas en tiempo real.
+
+---
+
+## I
+
+### ISO (International Organization for Standardization)
+Organización internacional que crea **estándares/reglas** para que productos y servicios sean seguros, confiables y de calidad. Abarca todo: desde tecnología hasta gestión empresarial.
+
+**Ejemplos conocidos:**
+| ISO | Qué regula | En simples |
+|-----|-----------|------------|
+| ISO 9001 | Calidad | "La empresa sigue procesos para no fallar" |
+| ISO 27001 | Seguridad de la información | "Los datos están protegidos de hackeos" |
+| ISO 14001 | Gestión ambiental | "La empresa contamina lo menos posible" |
+| ISO 22301 | Continuidad del negocio | "Si se cae el server, hay plan B" |
+
+> **En contexto de UMAI-Key**: Cuando hablamos de "normas ISO" en el Camino B, nos referimos principalmente a **ISO 27001** (seguridad de datos). Significa que si la app maneja datos sensibles de la universidad, debería cumplir estándares de seguridad internacionales.
+
+**En resumen**: ISO = las "reglas del juego" a nivel mundial para que todo sea más seguro y confiable.
+
+---
+
+## G
+
+### Google Form
+Herramienta gratuita de Google para crear formularios. Los usuarios completan el formulario → los datos van a Google Sheets automáticamente (o via AppScript).
+
+### Google Sheets
+Hoja de cálculo de Google. Funciona como base de datos simplificada en el MVP.
+
+---
+
+## M
+
+### Migración
+Proceso de mover datos o funcionalidades de un sistema a otro. Por ejemplo: migrar de Google Sheets a PostgreSQL cuando el MVP crezca.
+
+### MVP (Minimum Viable Product)
+Producto mínimo viable. Versión más simple de tu producto que cumple la función core. Permite validar la idea con el menor esfuerzo posible antes de invertir más.
+
+> En nuestro caso: QR impreso + Google Form + Sheets + Dashboard simple.
+
+---
+
+## P
+
+### Padrino (de área)
+En el contexto de Personal de Mantenimiento: es la **Dirección de Mantenimiento**. Cuando un empleado de mantenimiento solicita una llave, se aprueba pero se envía una notificación al área.
+
+> No confundir con el "Padrino" de auth/Guest de la versión previa del documento.
+
+### PostgreSQL
+Sistema de base de datos relacional (tipo SQL). Es robusto, open source, y muy usado en producción. En el MVP **no se usa** — usamos Google Sheets — pero es la opción para el Camino B.
+
+> **Analogía**: Si Google Sheets es una hoja de cálculo de Excel, PostgreSQL es un archivo de base de datos de verdad, capaz de manejar miles de registros y consultas complejas.
+
+**Ejemplo de estructura:**
+```sql
+CREATE TABLE solicitudes (
+  id SERIAL PRIMARY KEY,
+  nombre VARCHAR(255),
+  llave VARCHAR(100),
+  accion VARCHAR(50),
+  estado VARCHAR(50),
+  timestamp TIMESTAMP
+);
+```
+
+### Publish-as-web (Sheets)
+Opción de Google Sheets que permite exponer una hoja como página web pública (HTML). Se puede consultar via JavaScript sin API keys.
+
+---
+
+## Q
+
+### QR (Quick Response)
+Código de barras 2D que almacena información. En este proyecto se **imprime** y se pega en las puertas. Al escanearlo con cualquier celular → abre el Google Form.
+
+**Diferencia importante:**
+- ❌ ~~Escanear QR con la app para retirar llave~~ → NO SE HACE
+- ✅ QR impreso en puerta → link al Google Form → SE HACE
+
+---
+
+## R
+
+### Real-time / Tiempo Real
+Actualización de datos instantáneamente. En el dashboard de Seguridad: se refresca automáticamente cada 30 segundos para mostrar quién tiene qué llave ahora.
+
+---
+
+## S
+
+### SDD (Spec-Driven Development)
+Metodología de desarrollo donde **la especificación viene primero**. Antes de escribir código, definís:
+1. **Qué** se va a hacer (propuesta)
+2. **Cómo** se va a hacer (spec detallada)
+3. **Diseño técnico** (arquitectura)
+4. **Tareas concretas** (checklist)
+5. **Implementación** (código)
+6. **Verificación** (que el código matchee la spec)
+
+> Es como construir una casa: primero los planos, después los cimientos, después las paredes.
+
+En este proyecto lo usamos con los comandos `/opencode sdd-*`:
+- `sdd-propose` → crear propuesta
+- `sdd-spec` → escribir specs
+- `sdd-design` → diseño técnico
+- `sdd-tasks` → dividir en tareas
+- `sdd-apply` → implementar
+- `sdd-verify` → verificar contra spec
+
+### Sheets API
+API de Google para leer/escribir datos en Sheets programáticamente. Requiere autenticación pero da más control que "publish-as-web".
+
+### SSO (Single Sign-On)
+Inicio de sesión único. Un usuario se loguea una vez y tiene acceso a todos los sistemas de la institución. **No se usa en el MVP** pero está en el roadmap (Camino B).
+
+### Supabase
+Plataforma "todo-en-uno" que te da una base de datos PostgreSQL en la nube + Auth + Realtime + Storage + API automática. Es como un **"Firebase pero con PostgreSQL"**.
+
+**¿Qué ofrece?**
+| Componente | Función |
+|------------|---------|
+| PostgreSQL | Base de datos relacional robusta |
+| Auth | Sistema de login de usuarios |
+| Realtime | Actualizaciones en tiempo real (tipo WebSocket) |
+| Storage | Guardar archivos (fotos, PDFs) |
+| API automática | Endpoints REST generados automáticamente |
+
+**Ejemplo de uso:**
+```javascript
+const { data, error } = await supabase
+  .from('solicitudes')
+  .select('*')
+  .eq('estado', 'Activo');
+```
+
+> En el roadmap (Camino B), Supabase es la opción para migrar cuando Google Sheets se quede chico. Cambiás Sheets por Supabase y mantenés la web app.
+
+---
+
+## T
+
+### Timestamp
+Marca de tiempo. Registro de cuándo ocurrió un evento (fecha + hora). En Sheets lo usamos para saber cuándo se solicitó y cuándo se devolvió una llave.
+
+---
+
+## W
+
+### WebSocket
+Protocolo de comunicación bidireccional entre cliente y servidor. A diferencia de HTTP (request → response → fin), WebSocket mantiene la conexión **abierta** para enviar datos en tiempo real sin que el cliente tenga que pedir.
+
+**Ejemplo:**
+- HTTP: "Dame los datos" → "Aquí están" → "Dame los datos" → "Aquí están" (polling)
+- WebSocket: Conexión abierta → Server envía "¡Alguien retiró una llave!" automáticamente
+
+> **Analogía**: HTTP es como pedirle a alguien que te llame cuando cambie algo (y vos llamar cada 5 min para preguntar). WebSocket es como tener una línea abierta con esa persona que te avisa instantáneamente.
+
+En el MVP **no se usa** — usamos auto-refresh cada 30 segundos. En el Camino B, WebSocket permitiría ver cambios instantáneos en el dashboard.
+
+---
+
+## Conceptos Eliminados / En Espera
+
+Estos términos estaban en versiones anteriores pero **NO se usan en el MVP actual**:
+
+| Término | Motivo de eliminación |
+|---------|---------------------|
+| Login/Auth institucional | No hay login en MVP |
+| WebSocket | Sin backend propio, se usa auto-refresh |
+| QR escaneado | El QR es impreso, no se escanea |
+| PostgreSQL | Se usa Sheets por ahora |
+| Clean Architecture | MVP muy simple, overkill |
+| Guest/Padrino (auth) | Padrino ahora es solo la Dirección de Mantenimiento |
+| OAuth | Sin login = sin OAuth |
+
+---
+
+## Roadmap: Camino B (Futuro)
+
+Cuando el MVP esté validado y haya presupuesto para el **Camino B**, estos términos volverían a aplicarse:
+
+- **Backend propio**: Node.js + PostgreSQL o Supabase
+- **Login institucional**: SSO con cuenta Google institucional
+- **App móvil**: Escaneo de QR con la cámara
+- **WebSocket**: Actualizaciones instantáneas sin refresh
+- **API REST**: Comunicación formal entre frontend y backend
+
+---
+
+*Última actualización: 2026-04-06*
