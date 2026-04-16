@@ -13,7 +13,7 @@
 **UMAI-Key** es una solución que reemplaza el proceso manual de firma física para retiro de llaves universitarias por:
 1. **QR impresos** en la puerta que linkean a un Google Form
 2. **Google Sheets** como base de datos
-3. **Dashboard web** para que Seguridad y Directores vean el estado en tiempo real
+3. **Dashboard web** para que Seguridad vea el estado en tiempo real
 
 ### Problema Actual
 - Proceso lento: firma física en papel
@@ -21,144 +21,145 @@
 - Auditoría manual: difícil rastrear historial
 - Sin estadísticas de uso
 
-### Arquitectura MVP (Camino A - Sin Backend Propio)
+### Arquitectura MVP
 
 ```
 ┌─────────────────┐      ┌──────────────────┐      ┌───────────────┐
 │  QR IMPRESO     │ ───→ │  Google Form     │ ───→ │  Google       │
-│  (en la puerta) │      │  (usuario llena) │      │  Sheets       │
+│  (en la puerta) │      │  (1 form, 2 secs)│      │  Sheets       │
 └─────────────────┘      └──────────────────┘      │  (base datos) │
                                                     └───────┬───────┘
                                                             │ consulta
                                                             ▼
                                                     ┌───────────────┐
                                                     │  Dashboard    │
-                                                    │  (Seguridad/  │
-                                                    │   Directores) │
+                                                    │  (Seguridad)  │
                                                     └───────────────┘
 ```
 
-### Roles del Sistema
+---
 
-| Rol | Descripción | Vista en App |
-|-----|-------------|--------------|
-| **Docente** | Solicita llaves | Historial de sus solicitudes |
-| **Director/Coordinador** | Aprueba y audita | Dashboard completo + historial |
-| **Personal Limpieza/Mantenimiento** | No tiene mail institucional. Su "Padrino" es la Dirección de Mantenimiento. Se aprueba pero se notifica al área. | Historial de sus solicitudes |
-| **Seguridad** | Ve quién tiene qué llave EN ESTE MOMENTO | Dashboard en compu fija en entrada |
+## 2. DECISIONES DE DISEÑO (2026-04-14)
 
-### Stakeholders
-| Rol | Necesidad |
-|-----|-----------|
-| **Docente** | Solicitar/devolver llave de forma rápida |
-| **Personal Mantenimiento** | Solicitar llave (requiere aprobación + notificación a Dirección) |
-| **Seguridad** | Ver en tiempo real quién tiene cada llave |
-| **Director/Coordinador** | Auditar movimientos, ver estadísticas |
+### Dominio Institucional
+- **Email institucional:** `@maimonidesvirtual.com.ar`
+- **Validación:** Se hace via AppScript post-envío (Google Workspace Education no disponible)
+- **Comportamiento:** Si el email NO termina en `@maimonidesvirtual.com.ar` → se marca como "⚠️ Revisar"
+
+### Formulario: UN SOLO FORM CON DOS SECCIONES
+
+El formulario tiene **una sección inicial** que bifurca a dos caminos:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Sección 0: "¿Qué tipo de usuario sos?"            │
+│  - Docente / Personal institucional                 │
+│  - Mantenimiento / Limpieza / Otro                  │
+└──────────────────────┬──────────────────────────────┘
+                       │
+         ┌─────────────┴─────────────┐
+         ▼                           ▼
+┌─────────────────┐         ┌─────────────────┐
+│  Sección A:     │         │  Sección B:     │
+│  DOCENTE        │         │  MANTENIMIENTO  │
+├─────────────────┤         ├─────────────────┤
+│ - Email         │         │ - Sector/Área   │
+│ - ¿Qué llave?  │         │ - Email Padrino │
+│                 │         │ - ¿Qué llave?  │
+└─────────────────┘         └─────────────────┘
+                       │
+                       ▼
+              ───→ MISMA SHEETS ←───
+```
+
+### Estructura Final del Formulario
+
+| # | Campo | Tipo | Notas |
+|---|-------|------|-------|
+| 0 | ¿Qué tipo de usuario sos? | Opción múltiple | Bifurcación a Sección A o B |
+| 1A | Email institucional | Texto corto | Solo Sección A (Docente) |
+| 1B | Sector / Área | Texto corto | Solo Sección B (Mantenimiento) |
+| 2B | Email de tu Padrino | Texto corto | Solo Sección B |
+| 3 | ¿Qué llave solicitás? | Desplegable | Ambas secciones |
+| 4 | Confirmo que devolveré la llave al terminar | Casilla de verificación | Ambas secciones |
+
+### Campos ELIMINADOS (no se usan)
+- ~~Motivo~~ — No es necesario para el MVP
+- ~~Acción (Retiro/Devolución)~~ — Solo se usa para retirar; la devolución se hace en Dashboard
+
+### Flujo de Devolución
+```
+Usuario llena form → Llave marcada como "Retirada"
+        ↓
+Usuario devuelve llave
+        ↓
+Seguridad toca el botón "Devolver" en Dashboard → Estado = "Devuelta"
+```
 
 ---
 
-## 2. ENFOQUE MVP (CAMINO A)
+## 3. ESTRUCTURA DE DATOS (Google Sheets)
 
-> **PRINCIPIO: Empezar simple, escalar después.**
+### Hoja: Consolidado
 
-### Stack MVP
-- **Base de datos**: Google Sheets (conectado a Google Form via AppScript)
-- **Frontend**: HTML/CSS/JS simple o React básico (solo dashboard)
-- **Sin backend propio**: Todo corre en Google ecosystem
-- **Sin login**: Los usuarios solo interactúan con el Google Form
+| A | B | C | D | E | F | G |
+|---|---|---|---|---|---|---|
+| Timestamp | Nombre | Email | Tipo | Email Padrino | Llave | Estado |
 
-### Migración Futura (Camino B)
-Cuando el MVP esté validado y haya presupuesto, se puede migrar a:
-- Backend propio (Node.js + PostgreSQL)
-- Login institucional (SSO)
-- App móvil para escaneo de QR
-- Supabase como alternativa a Google Sheets
+### Estados posibles:
+- `🔴 Retirada` — Llave en uso (valor inicial)
+- `🟢 Devuelta` — Seguridad marcó la devolución
+
+### AppScript: Validación de emails
+```javascript
+function onFormSubmit(e) {
+  const respuesta = e.response;
+  const itemResponses = respuesta.getItemResponses();
+  
+  // Determinar tipo de usuario según la sección
+  const tipoUsuario = itemResponses[0].getResponse(); // "¿Qué tipo de usuario?"
+  
+  let nombre, email, tipo, emailPadrino, llave;
+  
+  if (tipoUsuario === 'Docente / Personal institucional') {
+    // Sección A
+    nombre = itemResponses[1].getResponse(); // Nombre
+    email = itemResponses[2].getResponse();  // Email
+    emailPadrino = '';
+    llave = itemResponses[3].getResponse();  // Llave
+  } else {
+    // Sección B
+    nombre = itemResponses[1].getResponse();       // Nombre
+    emailPadrino = itemResponses[2].getResponse(); // Email Padrino
+    email = itemResponses[3].getResponse();       // Email propio
+    llave = itemResponses[4].getResponse();       // Llave
+  }
+  
+  // Validar email institucional
+  let estado = '✅ Válido';
+  if (!email.endsWith('@maimonidesvirtual.com.ar')) {
+    estado = '⚠️ Revisar';
+  }
+  
+  // Escribir en Consolidado
+  const sheet = SpreadsheetApp.openById('SHEETS_ID').getSheetByName('Consolidado');
+  sheet.appendRow([new Date(), nombre, email, tipoUsuario, emailPadrino, llave, estado]);
+}
+```
 
 ---
 
-## 3. USER STORIES DEL MVP
+## 4. ROLES DEL SISTEMA
 
-### US-001: Solicitud de Llave via Form
-```
-Como docente,
-Quiero completar un formulario simple para solicitar una llave,
-Para no tener que firmar en papel.
-```
-**Criterios:**
-- [ ] Formulario con campos: Nombre, Sector/Llave solicitada, Motivo, Email (opcional)
-- [ ] QR impreso en puerta abre el Google Form
-- [ ] Al enviar → datos van a Google Sheets
-- [ ] Confirmación visual para el usuario
-
-### US-002: Devolución de Llave
-```
-Como usuario con llave,
-Quiero registrar la devolución,
-Para que conste en el sistema.
-```
-**Criterios:**
-- [ ] Mismo form permite marcar "Devolución"
-- [ ] Se registra timestamp de devolución en Sheets
-- [ ] Seguridad ve actualización en Dashboard
-
-### US-003: Personal de Mantenimiento (Con Padrino)
-```
-Como personal de limpieza/mantenimiento,
-Quiero solicitar una llave,
-Para que mi solicitud sea aprobada pero notifique a mi dirección.
-```
-**Criterios:**
-- [ ] Form incluye selector "¿Sos personal de mantenimiento?"
-- [ ] Si es sí → la solicitud se marca como "Requiere notificación"
-- [ ] Email automático a Dirección de Mantenimiento (via AppScript)
-
-### US-004: Dashboard Seguridad (Vista Principal)
-```
-Como personal de seguridad,
-Quiero ver en UNA PANTALLA quién tiene qué llave AHORA,
-Para tener control total desde la entrada.
-```
-**Criterios:**
-- [ ] Lista de llaves actualmente prestadas: nombre usuario + llave + hora retiro
-- [ ] Filtros: por sector, por tipo de usuario
-- [ ] Auto-refresh cada 30 segundos
-- [ ] Alertas visuales para préstamos > 2 horas
-
-### US-005: Dashboard Director/Coordinador
-```
-Como director o coordinador,
-Quiero ver el historial de solicitudes y aprobaciones,
-Para auditar y generar reportes.
-```
-**Criterios:**
-- [ ] Vista del historial completo
-- [ ] Filtros: por fecha, por usuario, por llave, por sector
-- [ ] Exportar a Excel/CSV
-- [ ] Estadísticas básicas: cuántas solicitudes por día, llaves más pedidas
+| Rol | Descripción | Interacción |
+|-----|-------------|-------------|
+| **Docente** | Tiene email @maimonidesvirtual.com.ar | Llena Sección A del form |
+| **Personal Mantenimiento** | NO tiene email institucional. Su Padrino es su responsable de área | Llena Sección B del form |
+| **Seguridad** | Ve quién tiene qué llave EN ESTE MOMENTO | Dashboard + marca devoluciones |
 
 ---
 
-## 4. ESTRUCTURA DE DATOS (Google Sheets)
-
-### Hoja: Solicitudes
-
-| Timestamp | Nombre Solicitante | Sector/Llave | Tipo Usuario | Motivo | Acción | Estado | Notas |
-|-----------|---------------------|--------------|--------------|--------|--------|--------|-------|
-| 2026-04-06 09:00 | Juan Pérez | Lab. Química | Docente | Práctica | Retiro | Activo | - |
-| 2026-04-06 10:30 | María García | Lab. Física | Docente | Práctica | Devolución | Cerrado | - |
-| 2026-04-06 11:00 | Carlos Ruiz | Aulas 3° piso | Mantenimiento | Limpieza | Retiro | Activo | ⚠️ Notificar |
-
-### Hoja: Llaves (Catálogo)
-
-| ID | Nombre | Sector | Estado |
-|----|--------|--------|--------|
-| L001 | Llave Lab. Química | Planta Baja | Disponible |
-| L002 | Llave Lab. Física | Planta Baja | Prestada |
-| L003 | Llave Aulas 3° piso | 3° Piso | Disponible |
-
----
-
-## 5. ARQUITECTURA DE ARCHIVOS (MVP Simple)
+## 5. ARQUITECTURA DE ARCHIVOS
 
 ```
 umai-key/
@@ -168,103 +169,85 @@ umai-key/
 │
 ├── dashboard/
 │   ├── index.html         # Dashboard principal (Seguridad)
-│   ├── admin.html         # Dashboard administración
 │   ├── css/
-│   │   └── styles.css     # Estilos compartidos
+│   │   └── styles.css     # Estilos
 │   └── js/
-│       ├── dashboard.js   # Lógica del dashboard
-│       └── config.js      # Configuración (ID de Sheets)
+│       ├── dashboard.js   # Lógica
+│       └── config.js      # Config (SHEETS_ID)
 │
-├── form/
-│   └── form-config.js     # AppScript para conectar Form → Sheets
+├── apps-script/
+│   └── form-to-sheets.js  # AppScript para conectar Form → Sheets
 │
 ├── assets/
-│   └── qr/                # QRs impresos (generados staticamente)
-│       └── generar-qr.js  # Script para generar QRs
+│   └── qr/                # QRs impresos
 │
-└── README.md              # Guía de setup
+└── README.md
 ```
 
 ---
 
-## 6. FLUJO DE DESARROLLO
+## 6. CONFIGURACIÓN ACTUAL
 
-### Fase 1: Google Form + Sheets
-1. Crear Google Form con campos necesarios
-2. Configurar AppScript para guardar en Sheets
-3. Probar flujo completo
+### Google Form
+- **URL:** https://forms.gle/JJYJhjuVM4F4FpC79
+- **Tipo:** Un solo form con dos secciones
+
+### Google Sheets
+- **URL:** https://docs.google.com/spreadsheets/d/15sm14n2uFIe2bkIG6SZhyot_U61B5yQ-8awXVgq7gSw/edit
+- **Hoja:** Consolidado
+- **Columnas:** Timestamp, Nombre, Email, Tipo, Email Padrino, Llave, Estado
+
+### Pendiente: AppScript
+- [ ] Conectar form → Sheets
+- [ ] Validar emails @maimonidesvirtual.com.ar
+- [ ] Consolidar ambas secciones en una sola columna "Llave"
+
+---
+
+## 7. FLUJO DE DESARROLLO
+
+### Fase 1: Google Form + Sheets ✅ (Completado)
+- [x] Crear Google Form con dos secciones
+- [x] Crear Google Sheets
+- [ ] Configurar AppScript
+- [ ] Probar flujo completo
 
 ### Fase 2: Dashboard Seguridad
-1. HTML/CSS/JS básico
-2. Conexión a Google Sheets via Sheets API o publish-as-web
-3. Auto-refresh
-4. Alertas visuales
+- [ ] HTML/CSS/JS básico
+- [ ] Conexión a Google Sheets
+- [ ] Botón "Devolver" para Seguridad
+- [ ] Auto-refresh cada 30 segundos
 
-### Fase 3: Dashboard Admin
-1. Agregar filtros
-2. Exportación CSV/Excel
-3. Estadísticas básicas
-
-### Fase 4: polish
-1. Responsive design
-2. Notificaciones email (AppScript)
-3. QRs impresos
+### Fase 3: polish
+- [ ] Responsive design
+- [ ] Estadísticas básicas
+- [ ] QRs impresos
 
 ---
 
-## 7. CONFIGURACIÓN
+## 8. LIMITACIONES CONOCIDAS
 
-### Google Sheets (Requerido)
-```javascript
-// config.js
-const CONFIG = {
-  SHEETS_ID: 'tu-google-sheets-id-aqui',
-  SHEET_NAME: 'Solicitudes',
-  REFRESH_INTERVAL: 30000 // 30 segundos
-};
-```
-
-### Google AppScript (Para conectar Form → Sheets)
-```javascript
-// form-config.js - Va en el AppScript del Google Form
-function onFormSubmit(e) {
-  const sheet = SpreadsheetApp.openById('SHEETS_ID').getSheetByName('Solicitudes');
-  const row = [
-    new Date(),
-    e.response.getRespondentEmail(),
-    e.response.getItemResponses()[0].getResponse(),
-    // ... más campos
-  ];
-  sheet.appendRow(row);
-}
-```
-
----
-
-## 8. TÉRMINOS IMPORTANTES
-
-Para términos técnicos y acrónimos, ver **GLOSARIO.md**.
+| Limitación | Impacto | Solución futura |
+|------------|---------|-----------------|
+| No hay restricción de dominio en Google Forms | Cualquiera puede escribir cualquier email | Google Workspace Education |
+| Validación de email post-envío | No se rechaza el form, solo se marca | Web app custom con validación en tiempo real |
+| Un solo Dashboard (Seguridad) | Directores no tienen vista propia | Dashboard Admin (futuro) |
 
 ---
 
 ## 9. SIGUIENTES PASOS
 
-### Inmediato (Esta semana)
-- [ ] Crear Google Form con campos
-- [ ] Configurar Sheets + AppScript
-- [ ] Probar flujo: Form → Sheets
+### Inmediato
+- [ ] Crear AppScript para conectar Form → Sheets
+- [ ] Probar que los datos llegan correctamente
+- [ ] Testear validación de emails
 
 ### Corto plazo
 - [ ] Dashboard básico de Seguridad
-- [ ] Conectar dashboard a Sheets
-- [ ] Auto-refresh funcionando
-
-### Medio plazo
-- [ ] Dashboard Admin con filtros
-- [ ] Exportación a Excel
-- [ ] Notificaciones por email
+- [ ] Conexión dashboard a Sheets
+- [ ] Funcionalidad "Devolver"
 
 ---
 
-*Documento actualizado: 2026-04-06*
+*Documento actualizado: 2026-04-14*
 *Metodología: Lean MVP + iterate based on feedback*

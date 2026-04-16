@@ -301,4 +301,26 @@ Cuando el MVP esté validado y haya presupuesto para el **Camino B**, estos tér
 
 ---
 
-*Última actualización: 2026-04-06*
+---
+
+## Conceptos Actualizados (2026-04-14)
+
+### Formulario con Secciones
+Google Forms permite crear **secciones** (páginas) dentro de un mismo formulario. Esto permite:
+- Una pregunta inicial que bifurca el flujo
+- Diferentes campos según la respuesta
+- Todo en un solo QR/link
+
+### Validación de Email Post-Envío
+Sin Google Workspace Education, no se puede restringir el dominio en el formulario. La validación se hace via AppScript:
+```javascript
+if (email.endsWith('@maimonidesvirtual.com.ar')) {
+  // Es institucional
+} else {
+  // Marcar como "⚠️ Revisar"
+}
+```
+
+---
+
+*Última actualización: 2026-04-14*
