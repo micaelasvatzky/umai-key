@@ -1,80 +1,5 @@
 import { useState, useEffect } from 'react'
-import { guardarSolicitud, subscribeRegistros, marcarDevolucion, Registro } from './firebase'
-
-// ============================================
-// TIPOS
-// ============================================
-
-interface Registro {
-  id: number
-  timestamp: string
-  nombre: string
-  email: string
-  tipo: string
-  motivo: string
-  area: string
-  mailAuditor: string
-  numeroAula: string
-  estado: 'retirada' | 'devuelta'
-  token?: string
-  idGuardia?: string  // Guardia que entregó/recibió la llave
-}
-
-// Mock data inicial
-const MOCK_DATA: Registro[] = [
-  {
-    id: 1,
-    timestamp: '2026-04-15 09:30:00',
-    nombre: 'Maria Gonzalez',
-    email: 'mgonzalez@maimonides.edu.ar',
-    tipo: 'Docente',
-    motivo: 'Dictado de clase',
-    area: 'Laboratorio Quimica',
-    mailAuditor: 'auditor.quimica@maimonides.edu.ar',
-    numeroAula: '101',
-    estado: 'retirada',
-    token: 'ABC123'
-  },
-  {
-    id: 2,
-    timestamp: '2026-04-15 10:15:00',
-    nombre: 'Carlos Perez',
-    email: 'cperez@maimonides.edu.ar',
-    tipo: 'Docente',
-    motivo: 'Evaluacion',
-    area: 'Laboratorio Fisica',
-    mailAuditor: 'auditor.fisica@maimonides.edu.ar',
-    numeroAula: '203',
-    estado: 'retirada',
-    token: 'DEF456'
-  },
-  {
-    id: 3,
-    timestamp: '2026-04-15 11:00:00',
-    nombre: 'Lucas Martinez',
-    email: 'lmartinez@maimonides.edu.ar',
-    tipo: 'Docente',
-    motivo: 'Clase practica',
-    area: 'Laboratorio Computacion',
-    mailAuditor: 'auditor.computacion@maimonides.edu.ar',
-    numeroAula: '305',
-    estado: 'devuelta',
-    token: 'GHI789'
-  },
-  {
-    id: 4,
-    timestamp: '2026-04-15 11:30:00',
-    nombre: 'Jose Herrera',
-    email: 'jherrera@maimonides.edu.ar',
-    tipo: 'Mantenimiento',
-    motivo: 'Reparacion',
-    area: 'Laboratorio Computacion',
-    mailAuditor: 'auditor.computacion@maimonides.edu.ar',
-    numeroAula: '102',
-    estado: 'retirada',
-    token: 'JKL012'
-  },
-]
+import { guardarSolicitud, subscribeRegistros, marcarDevolucion, type Registro } from './firebase'
 
 // ============================================
 // CONSTANTES
@@ -195,22 +120,18 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
     setCargando(true)
     
     try {
-      // Generar token aleatorio
-      const token = Math.random().toString(36).substring(2, 8).toUpperCase()
-      
-      // Guardar en Firestore
-      await guardarSolicitud({
+      // Guardar en Firestore (token se genera automáticamente)
+      const nuevoRegistro = await guardarSolicitud({
         nombre: formData.nombre,
         email: formData.email,
         tipo: 'Docente',
         motivo: formData.motivo,
         area: formData.aula,
         mailAuditor: '',
-        numeroAula: formData.aula,
-        token
+        numeroAula: formData.aula
       })
       
-      setTokenGenerado(token)
+      setTokenGenerado(nuevoRegistro.token || '')
       setEnviado(true)
     } catch (error) {
       console.error('Error al guardar:', error)
@@ -340,9 +261,10 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
 
           <button
             type="submit"
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition"
+            disabled={cargando}
+            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition"
           >
-            Enviar Solicitud
+            {cargando ? 'Enviando...' : 'Enviar Solicitud'}
           </button>
 
           <p className="text-slate-500 text-xs text-center">
@@ -386,7 +308,9 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
   }
 
   // Devolver llave
-  const devolver = async (id: string) => {
+  const devolver = async (id: string | undefined) => {
+    if (!id) return
+    
     const registro = registros.find(r => r.id === id)
     if (!registro) return
 

@@ -11,7 +11,7 @@
 ### Estado Actual
 - **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v3
 - **App completa funcionando** en `src/App.tsx`
-- **Pendiente:** Conexión Firebase Firestore para sincronización en tiempo real (NO implementada)
+- **Firebase Firestore implementado** en `src/firebase.ts` (sincronización en tiempo real activa)
 
 ### Visión General
 
@@ -39,9 +39,10 @@
 TP1/
 ├── src/
 │   ├── App.tsx           # App principal (TODO el código está aquí)
+│   ├── firebase.ts       # Firebase Firestore config y helpers
 │   ├── main.tsx          # Entry point
 │   └── index.css         # Tailwind
-├── package.json          # Dependencias: react, react-dom, vite, tailwindcss
+├── package.json          # Dependencias: react, react-dom, vite, tailwindcss, firebase
 ├── vite.config.ts
 ├── tailwind.config.js
 ├── docs/
@@ -93,35 +94,58 @@ const AULAS = [
 
 ### Datos Mock (MOCK_DATA)
 
-4 registros de ejemplo hardcodeados para testing local.
+Ya no se usa — datos ahora vienen de Firebase Firestore.
 
 ---
 
-## 4. PENDIENTE: FIREBASE INTEGRATION
+## 4. FIREBASE INTEGRATION (IMPLEMENTADO)
 
-### Lo que falta implementar
+### Configuración Actual
 
-1. **Instalar Firebase SDK:**
-   ```bash
-   npm install firebase
-   ```
+```typescript
+// src/firebase.ts - Configuración activa
+const firebaseConfig = {
+  apiKey: 'AIzaSyDOOqkroPWlP_TAQB_qpC4Qs4hEKALz33U',
+  authDomain: 'umai-key.firebaseapp.com',
+  projectId: 'umai-key',
+  storageBucket: 'umai-key.firebasestorage.app',
+  messagingSenderId: '263059590633',
+  appId: '1:263059590633:web:c1e9ae13c490ceabae0f78'
+}
+```
 
-2. **Configurar firebase.ts:**
-   - Credentials del proyecto Firebase
-   - Inicializar app y firestore
+### Helpers Implementados
 
-3. **Sincronizar datos:**
-   - Guardar solicitudes en Firestore (no solo en memoria)
-   - Escuchar cambios en tiempo real en Dashboard
-   - Reemplazar MOCK_DATA con datos reales
+1. **`guardarSolicitud(data)`** - Guarda en Firestore, genera token automáticamente
+2. **`subscribeRegistros(callback)`** - Escucha cambios en tiempo real (onSnapshot)
+3. **`marcarDevolucion(id, idGuardia)`** - Actualiza estado a 'devuelta'
 
-### Estado: NO INICIADO
+### Tipo Registro
 
-- [ ] Instalar firebase SDK
-- [ ] Crear config/firebase.ts
-- [ ] Modificar FormularioDocente para guardar en Firestore
-- [ ] Modificar DashboardSeguridad para escuchar Firestore
-- [ ] Probar flujo completo
+```typescript
+interface Registro {
+  id?: string           // Firebase doc ID
+  timestamp: string
+  nombre: string
+  email: string
+  tipo: string
+  motivo: string
+  area: string
+  mailAuditor: string
+  numeroAula: string
+  estado: 'retirada' | 'devuelta'
+  token?: string
+  idGuardia?: string
+}
+```
+
+### Estado: COMPLETADO ✅
+
+- [x] Firebase SDK instalado
+- [x] Configuración en firebase.ts
+- [x] FormularioDocente guarda en Firestore
+- [x] DashboardSeguridad escucha Firestore en tiempo real
+- [ ] Probar flujo completo (pendiente)
 
 ---
 
@@ -144,8 +168,10 @@ const AULAS = [
 | 2026-04-15 | Initial commit con estructura básica |
 | 2026-04-15 | Dashboard con UI Sentinel Core |
 | 2026-04-23 | Login flow, token validation, Firebase glossary |
+| 2026-04-23 | Firebase Firestore completado y connected |
+| 2026-04-23 | Build errors TypeScript fixed |
 
 ---
 
 *Documento actualizado: 2026-04-23*
-*Último trabajo: Conexión Firebase (incompleta)*
+*Último trabajo: Arreglado build errors, Firebase integrado*
