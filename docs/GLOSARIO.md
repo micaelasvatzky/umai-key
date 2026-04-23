@@ -305,7 +305,90 @@ Cuando el MVP esté validado y haya presupuesto para el **Camino B**, estos tér
 
 ## Conceptos Actualizados (2026-04-14)
 
-### Formulario con Secciones
+### F
+
+### Firebase
+Plataforma de Google para desarrollar aplicaciones web y móviles. Proporciona servicios de backend en la nube: base de datos, autenticación, hosting, analytics, etc.
+
+**Servicios que usaremos:**
+| Servicio | Función |
+|----------|---------|
+| **Firestore** | Base de datos NoSQL en tiempo real |
+| **Authentication** | Sistema de usuarios (no usamos en MVP) |
+| **Hosting** | Hosting estático para la web app |
+
+---
+
+### Firebase Firestore
+Base de datos NoSQL de Firebase. Almacena datos en documentos (JSON) y permite **escuchar cambios en tiempo real**.
+
+**Estructura:**
+```
+solicitudes (colección)
+  ├── doc1 (documento)
+  │   ├── token: "ABC123"
+  │   ├── nombre: "Juan Perez"
+  │   ├── aula: "101"
+  │   ├── estado: "retirada"
+  │   └── timestamp: "2026-04-23T10:30:00Z"
+  └── doc2 (documento)
+      └── ...
+```
+
+**Características:**
+- **Tiempo real integrado:** Con `onSnapshot()` recibís cambios instantáneos
+- **Sin servidor propio:** Firebase maneja toda la infraestructura
+- **Esquema flexible:** Cada documento puede tener campos distintos
+- **Límite gratuito generoso:** Para este proyecto alcanza de sobra
+
+**Ejemplo de uso en tiempo real:**
+```javascript
+import { initializeApp } from 'firebase/app';
+import { getFirestore, onSnapshot, collection } from 'firebase/firestore';
+
+const db = getFirestore(app);
+
+// Escuchar cambios en tiempo real
+onSnapshot(collection(db, 'solicitudes'), (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    if (change.type === 'added') {
+      console.log('Nueva solicitud:', change.doc.data());
+    }
+  });
+});
+```
+
+> **En UMAI-Key:** Usamos Firestore para sincronizar tokens entre el formulario del docente y el dashboard del guardia en tiempo real.
+
+---
+
+### Firebase Realtime Database
+La base de datos original de Firebase (anterior a Firestore). También es tiempo real pero con estructura de árbol JSON.
+
+**Diferencias con Firestore:**
+
+| Aspecto | Realtime Database | Firestore |
+|---------|-------------------|-----------|
+| **Estructura** | Árbol JSON | Colección → Documentos |
+| **Consultas** | Limitadas | Potentes (where, orderBy) |
+| **Escalabilidad** | Menor | Mayor |
+| **Modo offline** | Mejor | Bueno |
+| **Cuándo elegir** | Datos simples, chat real-time | Apps complejas, datos estructurados |
+
+**Ejemplo de estructura:**
+```json
+{
+  "solicitudes": {
+    "token123": {
+      "nombre": "Juan Perez",
+      "aula": "101",
+      "estado": "retirada"
+    }
+  }
+}
+```
+
+> **Veredicto:** Para UMAI-Key usamos **Firestore** porque es más moderno, tiene mejor rendimiento, y permite consultas más complejas si el proyecto crece.ormulario con Secciones
 Google Forms permite crear **secciones** (páginas) dentro de un mismo formulario. Esto permite:
 - Una pregunta inicial que bifurca el flujo
 - Diferentes campos según la respuesta
