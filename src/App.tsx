@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { guardarSolicitud, subscribeRegistros, marcarDevolucion, Registro } from './firebase'
 
 // ============================================
 // TIPOS
@@ -172,6 +173,7 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
   const [enviado, setEnviado] = useState(false)
   const [tokenGenerado, setTokenGenerado] = useState('')
   const [emailError, setEmailError] = useState('')
+  const [cargando, setCargando] = useState(false)
 
   // Validar email institucional
   const validarEmail = (email: string): boolean => {
@@ -180,7 +182,7 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
     return email.endsWith(dominio1) || email.endsWith(dominio2)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Validar email
@@ -190,10 +192,32 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
     }
     
     setEmailError('')
-    // Generar token aleatorio
-    const token = Math.random().toString(36).substring(2, 8).toUpperCase()
-    setTokenGenerado(token)
-    setEnviado(true)
+    setCargando(true)
+    
+    try {
+      // Generar token aleatorio
+      const token = Math.random().toString(36).substring(2, 8).toUpperCase()
+      
+      // Guardar en Firestore
+      await guardarSolicitud({
+        nombre: formData.nombre,
+        email: formData.email,
+        tipo: 'Docente',
+        motivo: formData.motivo,
+        area: formData.aula,
+        mailAuditor: '',
+        numeroAula: formData.aula,
+        token
+      })
+      
+      setTokenGenerado(token)
+      setEnviado(true)
+    } catch (error) {
+      console.error('Error al guardar:', error)
+      alert('Error al enviar la solicitud. Intenta de nuevo.')
+    } finally {
+      setCargando(false)
+    }
   }
 
   const handleEmailChange = (value: string) => {
@@ -339,14 +363,19 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
   const [tokenError, setTokenError] = useState('')
   const [tokenSuccess, setTokenSuccess] = useState('')
 
-  // Inicializar
+  // Inicializar - suscribirse a Firestore
   useEffect(() => {
     const savedDark = localStorage.getItem('darkMode') === 'true'
     setDarkMode(savedDark)
     if (savedDark) document.documentElement.classList.add('dark')
 
-    setRegistros(MOCK_DATA.filter(r => r.estado === 'retirada'))
-    setHistorial(MOCK_DATA.filter(r => r.estado === 'devuelta'))
+    // Suscribirse a cambios en tiempo real
+    const unsubscribe = subscribeRegistros((todosRegistros) => {
+      setRegistros(todosRegistros.filter(r => r.estado === 'retirada'))
+      setHistorial(todosRegistros.filter(r => r.estado === 'devuelta'))
+    })
+
+    return () => unsubscribe()
   }, [])
 
   const toggleDarkMode = () => {
@@ -357,7 +386,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
   }
 
   // Devolver llave
-  const devolver = (id: number) => {
+  const devolver = async (id: string) => {
     const registro = registros.find(r => r.id === id)
     if (!registro) return
 
@@ -365,13 +394,12 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
       return
     }
 
-    const actualizado = { 
-      ...registro, 
-      estado: 'devuelta' as const,
-      idGuardia: idGuardia  // Registrar quién recibió la devolución
+    try {
+      await marcarDevolucion(id, idGuardia)
+    } catch (error) {
+      console.error('Error al devolver:', error)
+      alert('Error al procesar la devolucion')
     }
-    setRegistros(prev => prev.filter(r => r.id !== id))
-    setHistorial(prev => [...prev, actualizado])
   }
 
   // Validar token

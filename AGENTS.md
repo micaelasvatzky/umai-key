@@ -1,253 +1,151 @@
 # AGENTS.md — Proyecto UMAI-Key
 
-> **取代 Firmas Físicas → QR + Dashboard para Préstamo de Llaves Universitarias**
+> **Sistema de Préstamo de Llaves Universitarias con Dashboard en Tiempo Real**
 > 
 > Universidad: Universidad Maimónides
 
 ---
 
-## 1. CONTEXTO DEL PROYECTO
+## 1. CONTEXTO DEL PROYECTO (ACTUAL - 2026-04-23)
+
+### Estado Actual
+- **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v3
+- **App completa funcionando** en `src/App.tsx`
+- **Pendiente:** Conexión Firebase Firestore para sincronización en tiempo real (NO implementada)
 
 ### Visión General
 
 **UMAI-Key** es una solución que reemplaza el proceso manual de firma física para retiro de llaves universitarias por:
-1. **QR impresos** en la puerta que linkean a un Google Form
-2. **Google Sheets** como base de datos
-3. **Dashboard web** para que Seguridad vea el estado en tiempo real
+1. **App Web** con formulario para docentes
+2. **Dashboard** para que Seguridad vea el estado en tiempo real
+3. **Firebase Firestore** para sincronización en tiempo real (EN CONSTRUCCIÓN)
 
-### Problema Actual
-- Proceso lento: firma física en papel
-- Sin visibilidad en tiempo real: nadie sabe quién tiene qué llave
-- Auditoría manual: difícil rastrear historial
-- Sin estadísticas de uso
-
-### Arquitectura MVP
+### Arquitectura Actual
 
 ```
 ┌─────────────────┐      ┌──────────────────┐      ┌───────────────┐
-│  QR IMPRESO     │ ───→ │  Google Form     │ ───→ │  Google       │
-│  (en la puerta) │      │  (1 form, 2 secs)│      │  Sheets       │
-└─────────────────┘      └──────────────────┘      │  (base datos) │
-                                                    └───────┬───────┘
-                                                            │ consulta
-                                                            ▼
-                                                    ┌───────────────┐
-                                                    │  Dashboard    │
-                                                    │  (Seguridad)  │
-                                                    └───────────────┘
+│  App Web        │      │  Firebase        │      │  Dashboard    │
+│  (Docente)      │ ───→ │  Firestore       │ ───→ │  (Seguridad)  │
+│  Formulario     │      │  (Tiempo Real)   │      │  Vista       │
+└─────────────────┘      └──────────────────┘      └───────────────┘
 ```
 
 ---
 
-## 2. DECISIONES DE DISEÑO (2026-04-14)
+## 2. ESTRUCTURA DEL PROYECTO
 
-### Dominio Institucional
-- **Email institucional:** `@maimonidesvirtual.com.ar`
-- **Validación:** Se hace via AppScript post-envío (Google Workspace Education no disponible)
-- **Comportamiento:** Si el email NO termina en `@maimonidesvirtual.com.ar` → se marca como "⚠️ Revisar"
-
-### Formulario: UN SOLO FORM CON DOS SECCIONES
-
-El formulario tiene **una sección inicial** que bifurca a dos caminos:
-
+### Archivos Principales
 ```
-┌─────────────────────────────────────────────────────┐
-│  Sección 0: "¿Qué tipo de usuario sos?"            │
-│  - Docente / Personal institucional                 │
-│  - Mantenimiento / Limpieza / Otro                  │
-└──────────────────────┬──────────────────────────────┘
-                       │
-         ┌─────────────┴─────────────┐
-         ▼                           ▼
-┌─────────────────┐         ┌─────────────────┐
-│  Sección A:     │         │  Sección B:     │
-│  DOCENTE        │         │  MANTENIMIENTO  │
-├─────────────────┤         ├─────────────────┤
-│ - Email         │         │ - Sector/Área   │
-│ - ¿Qué llave?  │         │ - Email Padrino │
-│                 │         │ - ¿Qué llave?  │
-└─────────────────┘         └─────────────────┘
-                       │
-                       ▼
-              ───→ MISMA SHEETS ←───
+TP1/
+├── src/
+│   ├── App.tsx           # App principal (TODO el código está aquí)
+│   ├── main.tsx          # Entry point
+│   └── index.css         # Tailwind
+├── package.json          # Dependencias: react, react-dom, vite, tailwindcss
+├── vite.config.ts
+├── tailwind.config.js
+├── docs/
+│   └── GLOSARIO.md      # Términos técnicos (Firebase, etc)
+└── index.html
 ```
 
-### Estructura Final del Formulario
-
-| # | Campo | Tipo | Notas |
-|---|-------|------|-------|
-| 0 | ¿Qué tipo de usuario sos? | Opción múltiple | Bifurcación a Sección A o B |
-| 1A | Email institucional | Texto corto | Solo Sección A (Docente) |
-| 1B | Sector / Área | Texto corto | Solo Sección B (Mantenimiento) |
-| 2B | Email de tu Padrino | Texto corto | Solo Sección B |
-| 3 | ¿Qué llave solicitás? | Desplegable | Ambas secciones |
-| 4 | Confirmo que devolveré la llave al terminar | Casilla de verificación | Ambas secciones |
-
-### Campos ELIMINADOS (no se usan)
-- ~~Motivo~~ — No es necesario para el MVP
-- ~~Acción (Retiro/Devolución)~~ — Solo se usa para retirar; la devolución se hace en Dashboard
-
-### Flujo de Devolución
-```
-Usuario llena form → Llave marcada como "Retirada"
-        ↓
-Usuario devuelve llave
-        ↓
-Seguridad toca el botón "Devolver" en Dashboard → Estado = "Devuelta"
-```
-
----
-
-## 3. ESTRUCTURA DE DATOS (Google Sheets)
-
-### Hoja: Consolidado
-
-| A | B | C | D | E | F | G |
-|---|---|---|---|---|---|---|
-| Timestamp | Nombre | Email | Tipo | Email Padrino | Llave | Estado |
-
-### Estados posibles:
-- `🔴 Retirada` — Llave en uso (valor inicial)
-- `🟢 Devuelta` — Seguridad marcó la devolución
-
-### AppScript: Validación de emails
-```javascript
-function onFormSubmit(e) {
-  const respuesta = e.response;
-  const itemResponses = respuesta.getItemResponses();
-  
-  // Determinar tipo de usuario según la sección
-  const tipoUsuario = itemResponses[0].getResponse(); // "¿Qué tipo de usuario?"
-  
-  let nombre, email, tipo, emailPadrino, llave;
-  
-  if (tipoUsuario === 'Docente / Personal institucional') {
-    // Sección A
-    nombre = itemResponses[1].getResponse(); // Nombre
-    email = itemResponses[2].getResponse();  // Email
-    emailPadrino = '';
-    llave = itemResponses[3].getResponse();  // Llave
-  } else {
-    // Sección B
-    nombre = itemResponses[1].getResponse();       // Nombre
-    emailPadrino = itemResponses[2].getResponse(); // Email Padrino
-    email = itemResponses[3].getResponse();       // Email propio
-    llave = itemResponses[4].getResponse();       // Llave
-  }
-  
-  // Validar email institucional
-  let estado = '✅ Válido';
-  if (!email.endsWith('@maimonidesvirtual.com.ar')) {
-    estado = '⚠️ Revisar';
-  }
-  
-  // Escribir en Consolidado
-  const sheet = SpreadsheetApp.openById('SHEETS_ID').getSheetByName('Consolidado');
-  sheet.appendRow([new Date(), nombre, email, tipoUsuario, emailPadrino, llave, estado]);
-}
-```
-
----
-
-## 4. ROLES DEL SISTEMA
+### Roles del Sistema
 
 | Rol | Descripción | Interacción |
 |-----|-------------|-------------|
-| **Docente** | Tiene email @maimonidesvirtual.com.ar | Llena Sección A del form |
-| **Personal Mantenimiento** | NO tiene email institucional. Su Padrino es su responsable de área | Llena Sección B del form |
-| **Seguridad** | Ve quién tiene qué llave EN ESTE MOMENTO | Dashboard + marca devoluciones |
+| **Docente** | Solicita retiro de llave | Formulario web → genera token |
+| **Seguridad** | Gestiona llaves prestadas | Dashboard con login → valida tokens → marca devoluciones |
 
----
-
-## 5. ARQUITECTURA DE ARCHIVOS
+### Flujo Completo
 
 ```
-umai-key/
-├── docs/
-│   ├── AGENTS.md          # Este archivo
-│   └── GLOSARIO.md        # Términos técnicos
-│
-├── dashboard/
-│   ├── index.html         # Dashboard principal (Seguridad)
-│   ├── css/
-│   │   └── styles.css     # Estilos
-│   └── js/
-│       ├── dashboard.js   # Lógica
-│       └── config.js      # Config (SHEETS_ID)
-│
-├── apps-script/
-│   └── form-to-sheets.js  # AppScript para conectar Form → Sheets
-│
-├── assets/
-│   └── qr/                # QRs impresos
-│
-└── README.md
+Docente solicita → Token generado → Seguridad valida → Entrega llave
+        ↓
+Docente devuelve → Seguridad marca "Devuelta" en Dashboard
 ```
 
 ---
 
-## 6. CONFIGURACIÓN ACTUAL
+## 3. CÓDIGO ACTUAL (src/App.tsx)
 
-### Google Form
-- **URL:** https://forms.gle/JJYJhjuVM4F4FpC79
-- **Tipo:** Un solo form con dos secciones
+### Componentes Principales
 
-### Google Sheets
-- **URL:** https://docs.google.com/spreadsheets/d/15sm14n2uFIe2bkIG6SZhyot_U61B5yQ-8awXVgq7gSw/edit
-- **Hoja:** Consolidado
-- **Columnas:** Timestamp, Nombre, Email, Tipo, Email Padrino, Llave, Estado
+1. **PantallaInicio** - Selector de rol (Docente / Seguridad)
+2. **FormularioDocente** - Solicita: nombre, email institucional, aula, motivo
+3. **LoginSeguridad** - Login con contraseña (FIJA: `seguridad2024`)
+4. **DashboardSeguridad** - Vista principal con:
+   - Validar token手动
+   - Lista de llaves retiradas
+   - Historial del día
+   - Botón "Devolver"
 
-### Pendiente: AppScript
-- [ ] Conectar form → Sheets
-- [ ] Validar emails @maimonidesvirtual.com.ar
-- [ ] Consolidar ambas secciones en una sola columna "Llave"
+### Constantes Importantes
+
+```typescript
+const CONTRASENA_GUARDIA = 'seguridad2024'
+
+const AULAS = [
+  '101', '102', '103', '201', '202', '203', '301', '302', '303',
+  'Laboratorio Quimica', 'Laboratorio Fisica', 'Laboratorio Computacion',
+  'Biblioteca', 'Sala de Reuniones', 'Direccion'
+]
+```
+
+### Datos Mock (MOCK_DATA)
+
+4 registros de ejemplo hardcodeados para testing local.
 
 ---
 
-## 7. FLUJO DE DESARROLLO
+## 4. PENDIENTE: FIREBASE INTEGRATION
 
-### Fase 1: Google Form + Sheets ✅ (Completado)
-- [x] Crear Google Form con dos secciones
-- [x] Crear Google Sheets
-- [ ] Configurar AppScript
+### Lo que falta implementar
+
+1. **Instalar Firebase SDK:**
+   ```bash
+   npm install firebase
+   ```
+
+2. **Configurar firebase.ts:**
+   - Credentials del proyecto Firebase
+   - Inicializar app y firestore
+
+3. **Sincronizar datos:**
+   - Guardar solicitudes en Firestore (no solo en memoria)
+   - Escuchar cambios en tiempo real en Dashboard
+   - Reemplazar MOCK_DATA con datos reales
+
+### Estado: NO INICIADO
+
+- [ ] Instalar firebase SDK
+- [ ] Crear config/firebase.ts
+- [ ] Modificar FormularioDocente para guardar en Firestore
+- [ ] Modificar DashboardSeguridad para escuchar Firestore
 - [ ] Probar flujo completo
 
-### Fase 2: Dashboard Seguridad
-- [ ] HTML/CSS/JS básico
-- [ ] Conexión a Google Sheets
-- [ ] Botón "Devolver" para Seguridad
-- [ ] Auto-refresh cada 30 segundos
+---
 
-### Fase 3: polish
-- [ ] Responsive design
-- [ ] Estadísticas básicas
-- [ ] QRs impresos
+## 5. DECISIONES DE DISEÑO
+
+### Email institucional
+- **Dominios válidos:** `@maimonides.edu.ar`, `@maimonidesvirtual.com.ar`
+- **Validación:** En cliente (formulario)
+
+### Dashboard
+- **Dark mode:** Soportado (guardado en localStorage)
+- **Sin emojis en UI:** Estilo Sentinel Core
 
 ---
 
-## 8. LIMITACIONES CONOCIDAS
+## 6. HISTORIAL DE CAMBIOS
 
-| Limitación | Impacto | Solución futura |
-|------------|---------|-----------------|
-| No hay restricción de dominio en Google Forms | Cualquiera puede escribir cualquier email | Google Workspace Education |
-| Validación de email post-envío | No se rechaza el form, solo se marca | Web app custom con validación en tiempo real |
-| Un solo Dashboard (Seguridad) | Directores no tienen vista propia | Dashboard Admin (futuro) |
-
----
-
-## 9. SIGUIENTES PASOS
-
-### Inmediato
-- [ ] Crear AppScript para conectar Form → Sheets
-- [ ] Probar que los datos llegan correctamente
-- [ ] Testear validación de emails
-
-### Corto plazo
-- [ ] Dashboard básico de Seguridad
-- [ ] Conexión dashboard a Sheets
-- [ ] Funcionalidad "Devolver"
+| Fecha | Cambio |
+|-------|--------|
+| 2026-04-15 | Initial commit con estructura básica |
+| 2026-04-15 | Dashboard con UI Sentinel Core |
+| 2026-04-23 | Login flow, token validation, Firebase glossary |
 
 ---
 
-*Documento actualizado: 2026-04-14*
-*Metodología: Lean MVP + iterate based on feedback*
+*Documento actualizado: 2026-04-23*
+*Último trabajo: Conexión Firebase (incompleta)*
