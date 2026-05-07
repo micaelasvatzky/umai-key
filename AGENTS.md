@@ -6,12 +6,13 @@
 
 ---
 
-## 1. CONTEXTO DEL PROYECTO (ACTUAL - 2026-04-30)
+## 1. CONTEXTO DEL PROYECTO (ACTUAL - 2026-05-07)
 
 ### Estado Actual
 - **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v3
 - **App completa funcionando** en `src/App.tsx`
 - **Firebase Firestore implementado y CONECTADO** en `src/firebase.ts` (sincronización en tiempo real activa)
+- **Contraseña Seguridad:** `umai2026`
 
 ### Visión General
 
@@ -20,13 +21,13 @@
 2. **Dashboard** para que Seguridad vea el estado en tiempo real
 3. **Firebase Firestore** para sincronización en tiempo real
 
-### Flujo Actualizado (2026-04-30)
+### Flujo Actual (2026-05-07)
 ```
 Docente solicita → Guarda en Firebase (estado: 'pendiente') → Token generado
         ↓
-Seguridad valida Token → Actualiza Firebase (estado: 'retirada', guarda fechaRetiro)
+Seguridad valida Token → Firebase: estado='retirada', guarda fechaRetiro
         ↓
-Seguridad marca "Devolver" → Mueve registro de 'solicitudes' a 'historial' en Firebase
+Seguridad marca "Devolver" → Modal de confirmación → Mueve de 'solicitudes' a 'historial'
 ```
 
 ---
@@ -89,20 +90,33 @@ interface Registro {
 
 ### Dashboard Seguridad (`src/App.tsx`)
 1. **Pestañas (Tabs):**
-   - **Activos:** Validar Token + Tabla de llaves retiradas.
-   - **Historial:** Tabla de devoluciones (colección `historial` de Firebase).
-   - **Panel Completo:** Grilla de Cards coloreadas según estado:
-     - 🔴 Rojo: Retiradas (en uso).
-     - 🟢 Verde: Listas para retirar (Token validado).
-     - 🟡 Amarillo: Pendientes de token (recién solicitadas).
+   - **Activos:** Validar Token + Tabla unificada con:
+     - 🟡 Pendientes primero (fondo amarillo, token visible).
+     - 🔴 Retiradas después (sin token por defecto, toggle 👁️ para mostrar).
+     - Botón "Devolver" en retiradas → Modal de confirmación.
+   - **Historial:** Sub-pestañas:
+     - **Hoy:** Devoluciones del día actual (desde 00:00hs).
+     - **Buscar:** Input date para seleccionar día y ver historial.
+   - **Panel Completo:** Grilla con TODAS las aulas de AULAS:
+     - 🟢 Verde: Disponible (sin registro activo).
+     - 🟡 Amarillo: Pendiente (alguien solicitó).
+     - 🔴 Rojo: Retirada (en uso, con botón Devolver).
 
-2. **Modal de Devolución:** Reemplaza el `confirm()` feo por un modal elegante dentro de la app.
+2. **Modal de Devolución:** Reemplaza el `confirm()` por un modal elegante con datos del registro.
 
-3. **Mensaje de Token:** Aparece "Token validado!" y desaparece solo a los 3 segundos.
+3. **Mensaje de Token:** Aparece "Token validado correctamente!" y desaparece solo a los 3 segundos (setTimeout).
+
+4. **Stats:** Muestra Retiradas, Pendientes e Historial Hoy.
+
+### Formulario Docente
+- Persiste nombre y email en `localStorage` entre solicitudes del mismo docente.
+- "Nueva Solicitud": mantiene nombre/email, resetea aula/motivo.
+- "Volver": limpia localStorage, campos vacíos la próxima vez.
+- Aulas ocupadas (retiradas) aparecen **grisadas y deshabilitadas** en el select, con texto "(en uso)".
 
 ### Constantes Importantes
 ```typescript
-const CONTRASENA_GUARDIA = 'seguridad2024'
+const CONTRASENA_GUARDIA = 'umai2026'
 
 const AULAS = [
   '101', '102', '103', '201', '202', '203', '301', '302', '303',
@@ -150,8 +164,8 @@ service cloud.firestore {
 ## 5. CÓMO PROBAR EL FLUJO
 
 1. **Correr el server:** `npm run dev -- --port 5173` (en tu consola).
-2. **Docente:** `http://localhost:5173/` → "Soy Docente" → Llenar formulario → "Enviar Solicitud" → Copiar **Token**.
-3. **Seguridad:** "Soy Seguridad" → Login (`seguridad2024`) → Pegar Token en "Validar Token" → Apreta "Validar".
+2. **Docente:** `http://localhost:5173/` → "Quiero retirar una llave" → Llenar formulario → "Enviar Solicitud" → Copiar **Token**.
+3. **Seguridad:** "Soy Seguridad" → Login (`umai2026`) → Pegar Token en "Validar Token" → Apreta "Validar".
 4. **Devolver:** En la tabla "Activos", apretar "Devolver" → Confirmar en el **Modal** → La llave desaparece de Activos y aparece en "Historial".
 
 ---
@@ -182,8 +196,16 @@ service cloud.firestore {
 | 2026-04-30 | **Modal de Devolución** (reemplaza confirm()) |
 | 2026-04-30 | **Pestañas (Tabs):** Activos, Historial, Panel Completo |
 | 2026-04-30 | **Panel Completo:** Cards coloreadas según estado (Rojo/Verde/Amarillo) |
+| 2026-05-07 | **Bugfixes masivos:** validarToken llama a Firebase, subscribeRegistros trae todo, subscribeHistorial conectado |
+| 2026-05-07 | **Modal de devolución:** Implementado correctamente (antes era solo esqueleto) |
+| 2026-05-07 | **Activos unificado:** Pendientes primero (amarillo), retiradas después, toggle 👁️ para tokens |
+| 2026-05-07 | **Historial con sub-tabs:** Hoy (filtro por día) + Buscar (input date) |
+| 2026-05-07 | **Panel Completo corregido:** Muestra TODAS las aulas con estado Disponible/Pendiente/Retirada |
+| 2026-05-07 | **Formulario Docente:** localStorage para nombre/email, aulas ocupadas grisadas |
+| 2026-05-07 | Contraseña cambiada a `umai2026`, "Auditor" → "Seguridad" |
+| 2026-05-07 | Mensaje token desaparece a los 3 segundos |
 
 ---
 
-*Documento actualizado: 2026-04-30*
-*Último trabajo: Estructura de Tabs, Panel Completo con colores, Modal de devolución, Flujo Firebase corregido*
+*Documento actualizado: 2026-05-07*
+*Último trabajo: Bugfixes, Panel Completo con todas las aulas, Historial con sub-tabs y buscador por fecha, formulario con persistencia y aulas ocupadas grisadas*

@@ -55,21 +55,13 @@ export const validarTokenEnFirebase = async (token: string, idGuardia: string) =
     throw new Error('Token no encontrado o ya utilizado')
   }
   const docRef = snapshot.docs[0].ref
-  // Marcamos la hora de validación. El estado sigue 'pendiente' para que el Panel lo pinte de Verde.
+  // Cambiamos estado a 'retirada' y guardamos fechaRetiro
   await updateDoc(docRef, {
+    estado: 'retirada',
     fechaRetiro: new Date().toISOString(),
     idGuardia: idGuardia
   })
 }   
-
-// 3. Entregar llave (Pasa de Verde/Disponible a Rojo/En uso)
-// Esta función se llama cuando el guardia le da la llave física al docente.
-export const entregarLlave = async (id: string) => {
-  const docRef = doc(db, 'solicitudes', id)
-  await updateDoc(docRef, {
-    estado: 'retirada' // Ahora sí pasa a Rojo en el Panel
-  })
-}
 
 // 4. Escuchar cambios en tiempo real (Activos: pendientes y retiradas en 'solicitudes')
 export const subscribeRegistros = (callback: (registros: Registro[]) => void) => {

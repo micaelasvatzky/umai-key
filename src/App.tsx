@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import { guardarSolicitud, subscribeRegistros, marcarDevolucion, type Registro } from './firebase'
+import { guardarSolicitud, subscribeRegistros, subscribeHistorial, validarTokenEnFirebase, marcarDevolucion, type Registro } from './firebase'
 
 // ============================================
 // CONSTANTES
 // ============================================
 
 // Contraseña única para todos los guardias
-const CONTRASENA_GUARDIA = 'seguridad2024'
+const CONTRASENA_GUARDIA = 'umai2026'
 
 // Lista de aulas disponibles
 const AULAS = [
@@ -48,8 +48,8 @@ function PantallaInicio({ onSeleccionarRol }: { onSeleccionarRol: (rol: 'docente
                 </svg>
               </div>
               <div className="text-left">
-                <div className="text-lg font-semibold">Soy Docente</div>
-                <div className="text-slate-400 text-sm">Solicitar retiro de llave</div>
+                  <div className="text-lg font-semibold">Quiero retirar una llave</div>
+                  <div className="text-slate-400 text-sm">Solicitar retiro de llave</div>
               </div>
               <svg className="w-5 h-5 text-slate-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -90,8 +90,8 @@ function PantallaInicio({ onSeleccionarRol }: { onSeleccionarRol: (rol: 'docente
 // Vista: Formulario para Docente
 function FormularioDocente({ onVolver }: { onVolver: () => void }) {
   const [formData, setFormData] = useState({
-    nombre: '',
-    email: '',
+    nombre: localStorage.getItem('umai_nombre') || '',
+    email: localStorage.getItem('umai_email') || '',
     aula: '',
     motivo: ''
   })
@@ -99,6 +99,15 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
   const [tokenGenerado, setTokenGenerado] = useState('')
   const [emailError, setEmailError] = useState('')
   const [cargando, setCargando] = useState(false)
+  const [aulasOcupadas, setAulasOcupadas] = useState<string[]>([])
+
+  // Saber qué aulas están en uso (retiradas)
+  useEffect(() => {
+    const unsubscribe = subscribeRegistros((todos) => {
+      setAulasOcupadas(todos.filter(r => r.estado === 'retirada').map(r => r.numeroAula))
+    })
+    return () => unsubscribe()
+  }, [])
 
   // Validar email institucional
   const validarEmail = (email: string): boolean => {
@@ -115,11 +124,21 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
       setEmailError('Solo se permiten emails @maimonides.edu.ar o @maimonidesvirtual.com.ar')
       return
     }
+
+    // Validar que el aula no esté ocupada
+    if (aulasOcupadas.includes(formData.aula)) {
+      alert('Esa aula ya está en uso. Elegí otra.')
+      return
+    }
     
     setEmailError('')
     setCargando(true)
     
     try {
+      // Guardar datos del docente para próxima solicitud
+      localStorage.setItem('umai_nombre', formData.nombre)
+      localStorage.setItem('umai_email', formData.email)
+
       // Guardar en Firestore (token se genera automáticamente)
       const nuevoRegistro = await guardarSolicitud({
         nombre: formData.nombre,
@@ -167,14 +186,18 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
           </div>
 
           <button
-            onClick={() => { setEnviado(false); setFormData({ nombre: '', email: '', aula: '', motivo: '' }); }}
+            onClick={() => { setEnviado(false); setFormData(prev => ({ nombre: prev.nombre, email: prev.email, aula: '', motivo: '' })); }}
             className="w-full bg-slate-600 hover:bg-slate-500 text-white py-3 rounded-lg font-medium transition"
           >
             Nueva Solicitud
           </button>
           
           <button
-            onClick={onVolver}
+            onClick={() => {
+              localStorage.removeItem('umai_nombre')
+              localStorage.removeItem('umai_email')
+              onVolver()
+            }}
             className="w-full mt-3 text-slate-400 hover:text-white py-2 text-sm transition"
           >
             Volver al inicio
@@ -190,7 +213,11 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={onVolver}
+            onClick={() => {
+              localStorage.removeItem('umai_nombre')
+              localStorage.removeItem('umai_email')
+              onVolver()
+            }}
             className="w-10 h-10 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center transition"
           >
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,9 +263,14 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
               className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-red-500 focus:outline-none transition"
             >
               <option value="">Seleccionar...</option>
-              {AULAS.map((aula) => (
-                <option key={aula} value={aula}>{aula}</option>
-              ))}
+              {AULAS.map((aula) => {
+                const ocupada = aulasOcupadas.includes(aula)
+                return (
+                  <option key={aula} value={aula} disabled={ocupada} className={ocupada ? 'text-gray-500' : ''}>
+                    {aula}{ocupada ? ' (en uso)' : ''}
+                  </option>
+                )
+              })}
             </select>
           </div>
 
@@ -276,15 +308,73 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
   )
 }
 
+// Componente: Modal de Devolución
+function ModalDevolucion({
+  registro,
+  onConfirm,
+  onCancel
+}: {
+  registro: Registro | null;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  if (!registro) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+        <h3 className="text-lg font-bold text-white mb-4">Confirmar Devolución</h3>
+        <div className="space-y-3 mb-6">
+          <div className="flex justify-between">
+            <span className="text-slate-400">Aula:</span>
+            <span className="text-white font-semibold">{registro.numeroAula}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Docente:</span>
+            <span className="text-white font-semibold">{registro.nombre}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Email:</span>
+            <span className="text-white">{registro.email}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Motivo:</span>
+            <span className="text-white">{registro.motivo}</span>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2.5 rounded-lg font-medium transition"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium transition"
+          >
+            Confirmar Devolución
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Vista: Dashboard Seguridad
 function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolver: () => void }) {
-  const [registros, setRegistros] = useState<Registro[]>([])
-  const [historial, setHistorial] = useState<Registro[]>([])
+  const [registros, setRegistros] = useState<Registro[]>([])      // TODOS los de 'solicitudes'
+  const [historialRegistros, setHistorialRegistros] = useState<Registro[]>([]) // colección 'historial'
   const [darkMode, setDarkMode] = useState(false)
   const [tokenInput, setTokenInput] = useState('')
   const [tokenError, setTokenError] = useState('')
   const [tokenSuccess, setTokenSuccess] = useState('')
   const [tabActiva, setTabActiva] = useState<'activos' | 'historial' | 'panel'>('activos')
+  const [showModal, setShowModal] = useState(false)
+  const [registroADevolver, setRegistroADevolver] = useState<Registro | null>(null)
+  const [mostrarTokens, setMostrarTokens] = useState(false)
+  const [subTabHistorial, setSubTabHistorial] = useState<'hoy' | 'buscar'>('hoy')
+  const [fechaBusqueda, setFechaBusqueda] = useState(() => new Date().toISOString().split('T')[0])
 
   // Inicializar - suscribirse a Firestore
   useEffect(() => {
@@ -292,13 +382,20 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
     setDarkMode(savedDark)
     if (savedDark) document.documentElement.classList.add('dark')
 
-    // Suscribirse a cambios en tiempo real
+    // Suscribirse a cambios en tiempo real en 'solicitudes' (pendientes + retiradas)
     const unsubscribe = subscribeRegistros((todosRegistros) => {
-      setRegistros(todosRegistros.filter(r => r.estado === 'retirada'))
-      setHistorial(todosRegistros.filter(r => r.estado === 'devuelta'))
+      setRegistros(todosRegistros)
     })
 
-    return () => unsubscribe()
+    // Suscribirse al HISTORIAL REAL (colección 'historial' en Firebase)
+    const unsubHistorial = subscribeHistorial((hist) => {
+      setHistorialRegistros(hist)
+    })
+
+    return () => {
+      unsubscribe()
+      unsubHistorial()
+    }
   }, [])
 
   const toggleDarkMode = () => {
@@ -308,43 +405,56 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
     document.documentElement.classList.toggle('dark', newMode)
   }
 
-  // Devolver llave
-  const devolver = async (id: string | undefined) => {
-    if (!id) return
-    
-    const registro = registros.find(r => r.id === id)
-    if (!registro) return
+  // Abrir modal de devolución
+  const abrirModalDevolucion = (reg: Registro) => {
+    setRegistroADevolver(reg)
+    setShowModal(true)
+  }
 
-    if (!confirm(`Confirmar devolucion del aula ${registro.numeroAula} por ${registro.nombre}?`)) {
-      return
-    }
+  // Confirmar devolución desde el modal
+  const confirmarDevolucion = async () => {
+    if (!registroADevolver?.id) return
 
     try {
-      await marcarDevolucion(id, idGuardia)
+      await marcarDevolucion(registroADevolver.id, idGuardia)
+      setShowModal(false)
+      setRegistroADevolver(null)
     } catch (error) {
       console.error('Error al devolver:', error)
       alert('Error al procesar la devolucion')
     }
   }
 
-  // Validar token
-  const validarToken = () => {
+  // Cancelar devolución
+  const cancelarDevolucion = () => {
+    setShowModal(false)
+    setRegistroADevolver(null)
+  }
+
+  // Validar token (busca en Firebase y cambia estado a 'retirada')
+  const validarToken = async () => {
     setTokenError('')
     setTokenSuccess('')
     
     const tokenUpper = tokenInput.toUpperCase().trim()
-    const encontrado = registros.find(r => r.token === tokenUpper)
+    if (!tokenUpper) return
     
-    if (encontrado) {
-      setTokenSuccess(`Token valido! ${encontrado.nombre} - Aula ${encontrado.numeroAula}`)
-    } else {
+    try {
+      await validarTokenEnFirebase(tokenUpper, idGuardia)
+      setTokenSuccess('Token validado correctamente!')
+      setTimeout(() => setTokenSuccess(''), 3000)
+    } catch (error) {
       setTokenError('Token no encontrado o ya utilizado')
     }
     setTokenInput('')
   }
 
-  const total = registros.length
-  const historialTotal = historial.length
+  const totalRetiradas = registros.filter(r => r.estado === 'retirada').length
+  const totalPendientes = registros.filter(r => r.estado === 'pendiente').length
+  const historialTotal = historialRegistros.length
+  const hoyStr = new Date().toISOString().split('T')[0]
+  const historialHoy = historialRegistros.filter(r => r.fechaDevolucion?.startsWith(hoyStr))
+  const historialBusqueda = historialRegistros.filter(r => r.fechaDevolucion?.startsWith(fechaBusqueda))
 
   return (
     <div className="min-h-screen">
@@ -360,7 +470,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
             </svg>
           </button>
           <h1 className="text-xl font-semibold">
-            <span className="text-red-500">Auditor</span>
+            <span className="text-red-500">Seguridad</span>
           </h1>
         </div>
         <div className="flex items-center gap-4">
@@ -427,7 +537,11 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
           <div className="flex gap-8">
             <div>
               <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Retiradas</div>
-              <div className="text-2xl font-bold text-red-600">{total}</div>
+              <div className="text-2xl font-bold text-red-600">{totalRetiradas}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Pendientes</div>
+              <div className="text-2xl font-bold text-yellow-600">{totalPendientes}</div>
             </div>
             <div>
               <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Historial Hoy</div>
@@ -443,7 +557,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
         {tabActiva === 'activos' && (
           <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded overflow-hidden">
             <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b dark:border-gray-600 font-semibold dark:text-white">
-              Llaves Retiradas (Activas)
+              Llaves Activas
             </div>
             <div className="overflow-x-auto max-h-96">
               <table className="w-full text-sm">
@@ -451,91 +565,220 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
                   <tr>
                     <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Aula</th>
                     <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Nombre</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Token</th>
+                    <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">
+                      <button
+                        onClick={() => setMostrarTokens(!mostrarTokens)}
+                        className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition"
+                      >
+                        Token
+                        <svg className={`w-4 h-4 transition ${mostrarTokens ? 'text-yellow-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {mostrarTokens ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          )}
+                        </svg>
+                      </button>
+                    </th>
+                    <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Estado</th>
                     <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Acción</th>
                   </tr>
                 </thead>
-              <tbody>
-                  {registros.filter(r => r.estado === 'retirada').length === 0 ? (
-                    <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                          No hay llaves retiradas
-                        </td>
-                      </tr>
-                  ) : (
-                    registros.filter(r => r.estado === 'retirada')
+                <tbody>
+                  {(() => {
+                    // Juntar pendientes y retiradas, pendientes primero
+                    const pendientes = registros
+                      .filter(r => r.estado === 'pendiente')
+                      .sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''))
+                    const retiradas = registros
+                      .filter(r => r.estado === 'retirada')
                       .sort((a, b) => a.numeroAula.localeCompare(b.numeroAula))
-                      .map((reg, idx) => (
+                    const todos = [...pendientes, ...retiradas]
+
+                    if (todos.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            No hay llaves activas
+                          </td>
+                        </tr>
+                      )
+                    }
+
+                    return todos.map((reg) => (
                       <tr
                         key={reg.id}
-                        className={`${idx % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-750' : 'bg-gray-50')} hover:${darkMode ? 'bg-gray-700' : 'bg-gray-100'} transition`}
+                        className={`
+                          ${reg.estado === 'pendiente'
+                            ? 'bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-l-yellow-500'
+                            : darkMode ? 'bg-gray-800' : 'bg-white'
+                          }
+                          hover:bg-yellow-100 dark:hover:bg-yellow-900/20 transition
+                        `}
                       >
                         <td className="px-3 py-2 font-medium">{reg.numeroAula}</td>
                         <td className="px-3 py-2">{reg.nombre}</td>
-                        <td className="px-3 py-2 font-mono text-xs text-yellow-600 dark:text-yellow-400">{reg.token}</td>
+                        <td className="px-3 py-2 font-mono text-xs">
+                          {reg.estado === 'pendiente' || mostrarTokens ? (
+                            <span className={`font-bold ${reg.estado === 'pendiente' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-400'}`}>{reg.token}</span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
                         <td className="px-3 py-2">
-                          <button
-                            onClick={() => devolver(reg.id)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium"
-                          >
-                            Devolver
-                          </button>
+                          {reg.estado === 'pendiente' ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
+                              Pendiente
+                            </span>
+                          ) : (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                              En uso
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          {reg.estado === 'retirada' && (
+                            <button
+                              onClick={() => abrirModalDevolucion(reg)}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium"
+                            >
+                              Devolver
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))
-                )}
-              </tbody>
+                  })()}
+                </tbody>
               </table>
             </div>
           </div>
         )}
 
         {tabActiva === 'historial' && (
-          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded overflow-hidden">
-            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b dark:border-gray-600 font-semibold dark:text-white">
-              Historial del Día
+          <div>
+            {/* Sub-tabs Historial */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setSubTabHistorial('hoy')}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition ${subTabHistorial === 'hoy' ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+              >
+                Hoy
+              </button>
+              <button
+                onClick={() => setSubTabHistorial('buscar')}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition ${subTabHistorial === 'buscar' ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+              >
+                Buscar
+              </button>
             </div>
-            <div className="overflow-x-auto max-h-96">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-100 dark:bg-gray-700 sticky top-0">
-                  <tr>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Hora Devolución</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Aula</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Nombre</th>
-                    <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Estado</th>
-                  </tr>
-                </thead>
-              <tbody>
-                {historial.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                      No hay historial hoy
-                    </td>
-                  </tr>
-                ) : (
-                  historial
-                    .sort((a, b) => a.numeroAula.localeCompare(b.numeroAula))
-                    .map((reg, idx) => (
-                      <tr
-                        key={reg.id}
-                        className={`${idx % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-750' : 'bg-gray-50')} hover:${darkMode ? 'bg-gray-700' : 'bg-gray-100'} transition`}
-                      >
-                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400">
-                          {reg.fechaDevolucion ? new Date(reg.fechaDevolucion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}
-                        </td>
-                        <td className="px-3 py-2 font-medium">{reg.numeroAula}</td>
-                        <td className="px-3 py-2">{reg.nombre}</td>
-                        <td className="px-3 py-2">
-                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300">
-                            Devuelta
-                          </span>
-                        </td>
+
+            {subTabHistorial === 'hoy' && (
+              <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded overflow-hidden">
+                <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b dark:border-gray-600 font-semibold dark:text-white text-sm">
+                  Historial de Hoy ({historialHoy.length})
+                </div>
+                <div className="overflow-x-auto max-h-80">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 dark:bg-gray-700 sticky top-0">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Hora</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Aula</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Nombre</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Estado</th>
                       </tr>
-                    ))
-                )}
-              </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody>
+                      {historialHoy.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            No hay devoluciones hoy
+                          </td>
+                        </tr>
+                      ) : (
+                        historialHoy
+                          .sort((a, b) => a.numeroAula.localeCompare(b.numeroAula))
+                          .map((reg, idx) => (
+                            <tr
+                              key={reg.id}
+                              className={`${idx % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-750' : 'bg-gray-50')} hover:${darkMode ? 'bg-gray-700' : 'bg-gray-100'} transition`}
+                            >
+                              <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">
+                                {reg.fechaDevolucion ? new Date(reg.fechaDevolucion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}
+                              </td>
+                              <td className="px-3 py-2 font-medium">{reg.numeroAula}</td>
+                              <td className="px-3 py-2">{reg.nombre}</td>
+                              <td className="px-3 py-2">
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                                  Devuelta
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {subTabHistorial === 'buscar' && (
+              <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded overflow-hidden">
+                <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b dark:border-gray-600 flex items-center gap-3">
+                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Fecha</label>
+                  <input
+                    type="date"
+                    value={fechaBusqueda}
+                    onChange={(e) => setFechaBusqueda(e.target.value)}
+                    className="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-xs focus:border-red-500 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {historialBusqueda.length} registro{historialBusqueda.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="overflow-x-auto max-h-80">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 dark:bg-gray-700 sticky top-0">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Hora</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Aula</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Nombre</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historialBusqueda.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            No hay devoluciones en esta fecha
+                          </td>
+                        </tr>
+                      ) : (
+                        historialBusqueda
+                          .sort((a, b) => a.numeroAula.localeCompare(b.numeroAula))
+                          .map((reg, idx) => (
+                            <tr
+                              key={reg.id}
+                              className={`${idx % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-750' : 'bg-gray-50')} hover:${darkMode ? 'bg-gray-700' : 'bg-gray-100'} transition`}
+                            >
+                              <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">
+                                {reg.fechaDevolucion ? new Date(reg.fechaDevolucion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}
+                              </td>
+                              <td className="px-3 py-2 font-medium">{reg.numeroAula}</td>
+                              <td className="px-3 py-2">{reg.nombre}</td>
+                              <td className="px-3 py-2">
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                                  Devuelta
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -545,55 +788,60 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
               Panel Completo de Llaves
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {registros.length === 0 ? (
-                <div className="col-span-full text-center text-gray-500 dark:text-gray-400 py-8">
-                  No hay llaves activas
-                </div>
-              ) : (
-                registros
-                  .sort((a, b) => a.numeroAula.localeCompare(b.numeroAula))
-                  .map((reg) => {
-                    // Determinar color según estado
-                    let colorClass = ''
-                    if (reg.estado === 'retirada') {
-                      colorClass = 'border-red-500 bg-red-50 dark:bg-red-900/20' // Rojo: Retirada (en uso)
-                    } else if (reg.estado === 'pendiente') {
-                      // Si está pendiente pero tiene fechaRetiro (validada pero no devuelta) -> Verde
-                      if (reg.fechaRetiro) {
-                        colorClass = 'border-green-500 bg-green-50 dark:bg-green-900/20' // Verde: Lista para retirar
-                      } else {
-                        colorClass = 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' // Amarillo: Pendiente de token
-                      }
-                    }
-                    
-                    return (
-                      <div key={reg.id} className={`border-l-4 rounded-lg p-4 shadow-sm ${colorClass}`}>
-                        <div className="font-bold text-lg mb-1">{reg.numeroAula}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">{reg.nombre}</div>
-                        <div className="flex justify-between items-center">
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold 
-                            ${reg.estado === 'pendiente' 
-                              ? (reg.fechaRetiro ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700') 
-                              : 'bg-red-100 text-red-700'}`}>
-                            {reg.estado === 'pendiente' 
-                              ? (reg.fechaRetiro ? 'Lista p/ Retirar' : 'Pendiente Token') 
-                              : 'Retirada'}
-                          </span>
-                          {reg.estado === 'retirada' && (
-                            <button
-                              onClick={() => { setRegistroADevolver(reg); setShowModal(true); }}
-                              className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs"
-                            >
-                              Devolver
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })
-              )}
+              {AULAS.sort().map((aula) => {
+                // Buscar si hay un registro activo para esta aula
+                const activo = registros.find(r => r.numeroAula === aula)
+
+                let colorClass = 'border-green-500 bg-green-50 dark:bg-green-900/20' // Verde: Disponible
+                let badgeClass = 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                let textoEstado = 'Disponible'
+                let nombreSolicitante = ''
+
+                if (activo?.estado === 'pendiente') {
+                  colorClass = 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' // Amarillo: Pendiente
+                  badgeClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
+                  textoEstado = 'Pendiente'
+                  nombreSolicitante = activo.nombre
+                } else if (activo?.estado === 'retirada') {
+                  colorClass = 'border-red-500 bg-red-50 dark:bg-red-900/20' // Rojo: Retirada
+                  badgeClass = 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                  textoEstado = 'Retirada'
+                  nombreSolicitante = activo.nombre
+                }
+
+                return (
+                  <div key={aula} className={`border-l-4 rounded-lg p-4 shadow-sm ${colorClass}`}>
+                    <div className="font-bold text-lg mb-1">{aula}</div>
+                    {nombreSolicitante && (
+                      <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">{nombreSolicitante}</div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>
+                        {textoEstado}
+                      </span>
+                      {activo?.estado === 'retirada' && (
+                        <button
+                          onClick={() => abrirModalDevolucion(activo)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs"
+                        >
+                          Devolver
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
+        )}
+
+        {/* Modal de Devolución */}
+        {showModal && (
+          <ModalDevolucion
+            registro={registroADevolver}
+            onConfirm={confirmarDevolucion}
+            onCancel={cancelarDevolucion}
+          />
         )}
 
         <footer className="mt-6 py-4 text-center text-gray-400 dark:text-gray-500 text-xs">
