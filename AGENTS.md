@@ -13,6 +13,7 @@
 - **App completa funcionando** en `src/App.tsx`
 - **Firebase Firestore implementado y CONECTADO** en `src/firebase.ts` (sincronización en tiempo real activa)
 - **Contraseña Seguridad:** `umai2026`
+- **Formspree ID:** Configurable en `firebase.ts` (constante `FORMSPREE_ID`)
 
 ### Visión General
 
@@ -42,6 +43,7 @@ TP1/
 │   ├── firebase.ts       # Firebase Firestore config y helpers
 │   ├── main.tsx          # Entry point
 │   └── index.css         # Tailwind
+├── resources.json        # Lista oficial de 91 recursos/aulas de la universidad
 ├── package.json          # Dependencias: react, react-dom, vite, tailwindcss, firebase
 ├── vite.config.ts
 ├── tailwind.config.js
@@ -56,6 +58,7 @@ TP1/
 |-----|-------------|-------------|
 | **Docente** | Solicita retiro de llave | Formulario web → genera token → espera validación |
 | **Seguridad** | Gestiona llaves prestadas | Dashboard con login → valida tokens → marca devoluciones |
+| **Auditor** | Supervisa solicitudes de su área | Login por token vía email en `/auditores` → Dashboard unificado con todos los registros (pendientes, retiradas y devueltas) filtrados por `mailAuditor` |
 
 ---
 
@@ -67,6 +70,9 @@ TP1/
 - **`marcarDevolucion(id, idGuardia)`**: **Mueve** el registro de `solicitudes` a `historial` en Firebase.
 - **`subscribeRegistros(callback)`**: Escucha cambios en tiempo real de `solicitudes`.
 - **`subscribeHistorial(callback)`**: Escucha cambios en tiempo real de `historial`.
+- **`generarTokenAuditor(email)`**: Genera token de 6 caracteres para auditor, lo guarda en colección `auditorTokens`.
+- **`verificarTokenAuditor(email, token)`**: Verifica token contra Firebase y lo marca como usado.
+- **`enviarTokenPorEmail(email, token)`**: Envía el token por email mediante Formspree.
 
 ### Tipo Registro (Actualizado)
 ```typescript
@@ -118,11 +124,13 @@ interface Registro {
 ```typescript
 const CONTRASENA_GUARDIA = 'umai2026'
 
-const AULAS = [
-  '101', '102', '103', '201', '202', '203', '301', '302', '303',
-  'Laboratorio Quimica', 'Laboratorio Fisica', 'Laboratorio Computacion',
-  'Biblioteca', 'Sala de Reuniones', 'Direccion'
-]
+// Importado dinámicamente desde resources.json (91 recursos de la universidad)
+// Filtrados vehículos: Hyundai, Toyota, Mercedes (solo espacios físicos)
+const EXCLUIDOS = ['Hyundai (10 personas)', 'Toyota camioneta', 'Mercedes (19 personas)']
+const AULAS = (resourcesData as { resources: Array<{ name: string }> }).resources
+  .map(r => r.name)
+  .filter(name => !EXCLUIDOS.includes(name))
+  .sort()
 ```
 
 ---
@@ -173,7 +181,7 @@ service cloud.firestore {
 ## 6. DECISIONES DE DISEÑO
 
 ### Email institucional
-- **Dominios válidos:** `@maimonides.edu.ar`, `@maimonidesvirtual.com.ar`
+- **Dominios válidos:** `@maimonides.edu`, `@maimonidesvirtual.com.ar`
 - **Validación:** En cliente (formulario)
 
 ### Dashboard
@@ -204,8 +212,16 @@ service cloud.firestore {
 | 2026-05-07 | **Formulario Docente:** localStorage para nombre/email, aulas ocupadas grisadas |
 | 2026-05-07 | Contraseña cambiada a `umai2026`, "Auditor" → "Seguridad" |
 | 2026-05-07 | Mensaje token desaparece a los 3 segundos |
+| 2026-05-20 | **resources.json integrado:** Reemplazado array hardcodeado de aulas por import dinámico desde `resources.json` (91 recursos oficiales de la universidad) |
+
+| 2026-05-28 | **Auditor role added:** Login en `/auditores` con token vía email + Dashboard filtrado por `mailAuditor` |
+| 2026-05-28 | **URLs reales:** History API para tabs del Dashboard (/, /historial, /panel) sin hash ni query params |
+| 2026-05-28 | **Spinner loading:** Componente reutilizable con animate-spin en botones de envío, validación y devolución |
+| 2026-05-28 | **Calendario visual:** Reemplazado input date nativo por calendario mensual en Historial/Buscar |
+| 2026-05-28 | **Dashboard Auditor simplificado:** Una sola vista unificada sin tabs ni stats, todo en una tabla (pendientes + retiradas + devueltas) |
+| 2026-05-28 | **Email en tabla Activos:** Agregada columna Email en tabla de llaves activas del Dashboard Seguridad |
 
 ---
 
-*Documento actualizado: 2026-05-07*
-*Último trabajo: Bugfixes, Panel Completo con todas las aulas, Historial con sub-tabs y buscador por fecha, formulario con persistencia y aulas ocupadas grisadas*
+*Documento actualizado: 2026-05-28*
+*Último trabajo: Simplificación Dashboard Auditor + columna Email en Activos*

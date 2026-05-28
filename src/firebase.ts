@@ -1,5 +1,9 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, where, getDocs, deleteDoc, setDoc } from 'firebase/firestore'
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, where, getDocs, deleteDoc, setDoc, getDoc } from 'firebase/firestore'
+
+// Configurable: form ID de Formspree (crear en https://formspree.io y pegar el ID)
+// Ej: si tu form es https://formspree.io/f/xabc1234, el ID es 'xabc1234'
+export const FORMSPREE_ID = 'CAMBIAME'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyDOOqkroPWlP_TAQB_qpC4Qs4hEKALz33U',
@@ -104,4 +108,48 @@ export const marcarDevolucion = async (id: string, idGuardia: string) => {
   })
   
   await deleteDoc(solicitudRef)
+}
+
+// ============================================
+// AUDITOR HELPERS
+// ============================================
+
+// Generar token de acceso para auditor y guardarlo en Firebase
+export const generarTokenAuditor = async (email: string) => {
+  const token = Math.random().toString(36).substring(2, 8).toUpperCase()
+  await setDoc(doc(db, 'auditorTokens', email), {
+    email,
+    token,
+    createdAt: new Date().toISOString(),
+    usado: false
+  })
+  return token
+}
+
+// Verificar token de auditor contra Firebase
+export const verificarTokenAuditor = async (email: string, token: string): Promise<boolean> => {
+  const docRef = doc(db, 'auditorTokens', email)
+  const docSnap = await getDoc(docRef)
+  if (docSnap.exists() && docSnap.data().token === token && !docSnap.data().usado) {
+    await updateDoc(docRef, { usado: true })
+    return true
+  }
+  return false
+}
+
+// Enviar token por email usando Formspree
+export const enviarTokenPorEmail = async (email: string, token: string) => {
+  if (FORMSPREE_ID === 'CAMBIAME') {
+    console.warn('⚠️  Formspree no configurado. El token se muestra en pantalla para testing.')
+    return
+  }
+  await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      email,
+      subject: 'Código de acceso - UMAI-Key Auditor',
+      message: `Tu código de acceso para UMAI-Key es: ${token}\n\nIngresalo en la pantalla de inicio de sesión de auditoría.\n\nSaludos,\nEquipo UMAI-Key`
+    })
+  })
 }
