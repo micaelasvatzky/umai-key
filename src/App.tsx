@@ -1477,7 +1477,7 @@ function DashboardAuditor({ auditorEmail, onVolver }: { auditorEmail: string; on
   useEffect(() => {
     const savedDark = localStorage.getItem('darkMode') === 'true'
     setDarkMode(savedDark)
-    if (savedDark) document.documentElement.classList.add('dark')
+    document.documentElement.classList.toggle('dark', savedDark)
 
     const unsubRegistros = subscribeRegistros((todos) => {
       setRegistros(todos.filter(r => r.mailAuditor === auditorEmail))
@@ -1763,7 +1763,7 @@ function App() {
   // Inicializar dark mode desde localStorage
   useEffect(() => {
     const isDark = localStorage.getItem('darkMode') === 'true'
-    if (isDark) document.documentElement.classList.add('dark')
+    document.documentElement.classList.toggle('dark', isDark)
   }, [])
 
   const handleSeguridadClick = () => {
