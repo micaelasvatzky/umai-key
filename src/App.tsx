@@ -46,7 +46,7 @@ function PantallaInicio({ onSeleccionarRol }: { onSeleccionarRol: (rol: 'docente
         <div className="absolute top-4 right-4 z-20">
           <button
             onClick={toggleHomeDark}
-            className="w-9 h-9 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
+            className="w-9 h-9 rounded-xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
             title={isDarkHome ? 'Modo Claro' : 'Modo Oscuro'}
           >
             {isDarkHome ? (
@@ -62,7 +62,7 @@ function PantallaInicio({ onSeleccionarRol }: { onSeleccionarRol: (rol: 'docente
         </div>
 
         {/* Glass Card */}
-        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-2xl border border-white/40 dark:border-gray-700/50 rounded-3xl p-8 shadow-2xl dark:shadow-black/50">
+        <div className="bg-blue-50/70 dark:bg-gray-800/70 backdrop-blur-2xl border border-white/40 dark:border-gray-700/50 rounded-3xl p-8 shadow-2xl dark:shadow-black/50">
 
         {/* Logo / Titulo */}
         <div className="text-center mb-8">
@@ -82,7 +82,7 @@ function PantallaInicio({ onSeleccionarRol }: { onSeleccionarRol: (rol: 'docente
         <div className="space-y-4">
           <button
             onClick={() => onSeleccionarRol('docente')}
-            className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 border border-blue-100 dark:border-gray-700 text-left p-5 rounded-2xl transition-all group shadow-lg dark:shadow-black/50 hover:shadow-xl active:scale-[0.98]"
+            className="w-full bg-blue-50/90 dark:bg-gray-800/90 backdrop-blur-sm hover:bg-blue-100 dark:hover:bg-gray-800 border border-blue-100 dark:border-gray-700 text-left p-5 rounded-2xl transition-all group shadow-lg dark:shadow-black/50 hover:shadow-xl active:scale-[0.98]"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition shadow-md shadow-blue-200 dark:shadow-blue-900/30">
@@ -102,7 +102,7 @@ function PantallaInicio({ onSeleccionarRol }: { onSeleccionarRol: (rol: 'docente
 
           <button
             onClick={() => onSeleccionarRol('seguridad')}
-            className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 border border-blue-100 dark:border-gray-700 text-left p-5 rounded-2xl transition-all group shadow-lg dark:shadow-black/50 hover:shadow-xl active:scale-[0.98]"
+            className="w-full bg-blue-50/90 dark:bg-gray-800/90 backdrop-blur-sm hover:bg-blue-100 dark:hover:bg-gray-800 border border-blue-100 dark:border-gray-700 text-left p-5 rounded-2xl transition-all group shadow-lg dark:shadow-black/50 hover:shadow-xl active:scale-[0.98]"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center group-hover:scale-110 transition shadow-md shadow-blue-200 dark:shadow-blue-900/30">
@@ -227,7 +227,7 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
           <div className="absolute -top-2 right-0 z-10">
             <button
               onClick={toggleFormDark}
-              className="w-9 h-9 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
+              className="w-9 h-9 rounded-xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
               title={isDarkForm ? 'Modo Claro' : 'Modo Oscuro'}
             >
               {isDarkForm ? (
@@ -241,7 +241,7 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
               )}
             </button>
           </div>
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-8 text-center shadow-lg">
+          <div className="bg-blue-50/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-8 text-center shadow-lg">
           <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mx-auto mb-5 shadow-md shadow-green-200 dark:shadow-green-900/30">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.5 12.75l6 6 9-13.5" />
@@ -290,7 +290,7 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
               localStorage.removeItem('umai_email')
               onVolver()
             }}
-            className="w-10 h-10 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:shadow-md transition"
+            className="w-10 h-10 rounded-2xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:shadow-md transition"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -299,7 +299,7 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
           <h1 className="text-lg font-bold text-gray-900 dark:text-white flex-1">Solicitar Llave</h1>
           <button
             onClick={toggleFormDark}
-            className="w-9 h-9 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
+            className="w-9 h-9 rounded-xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
             title={isDarkForm ? 'Modo Claro' : 'Modo Oscuro'}
           >
             {isDarkForm ? (
@@ -315,7 +315,7 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-6 space-y-5 shadow-lg">
+        <form onSubmit={handleSubmit} className="bg-blue-50/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-6 space-y-5 shadow-lg">
           <div>
             <label className="block text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Nombre completo</label>
             <input
@@ -415,7 +415,7 @@ function ModalDevolucion({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 max-w-sm w-full mx-auto shadow-2xl border border-blue-100 dark:border-gray-700">
+      <div className="bg-blue-50 dark:bg-gray-800 rounded-3xl p-6 max-w-sm w-full mx-auto shadow-2xl border border-blue-100 dark:border-gray-700">
         {/* Handle bar (iOS-style) */}
         <div className="w-10 h-1 bg-blue-200 dark:bg-blue-700 rounded-full mx-auto mb-5" />
         
@@ -504,7 +504,7 @@ function Calendario({
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
 
   return (
-    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-blue-100 dark:border-gray-700 rounded-2xl p-4 shadow-lg dark:shadow-black/50 select-none">
+    <div className="bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-xl border border-blue-100 dark:border-gray-700 rounded-2xl p-4 shadow-lg dark:shadow-black/50 select-none">
       {/* Header con navegación de meses */}
       <div className="flex items-center justify-between mb-3">
         <button
@@ -792,7 +792,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
       {/* ============================================ */}
       {/* HEADER — Desktop + Mobile */}
       {/* ============================================ */}
-      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-blue-100 dark:border-gray-800 px-4 md:px-6 py-2.5 flex items-center justify-between z-10 shadow-sm">
+      <header className="bg-blue-50/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-blue-100 dark:border-gray-800 px-4 md:px-6 py-2.5 flex items-center justify-between z-10 shadow-sm">
         {/* Left: Back + Logo + Title */}
         <div className="flex items-center gap-3">
           <button onClick={onVolver} className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition">
@@ -828,7 +828,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
       {/* ============================================ */}
       <div className="flex flex-1 overflow-hidden">
         {/* SIDEBAR — Desktop */}
-        <aside className="hidden md:flex w-64 flex-col bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-r border-blue-100 dark:border-gray-800 shadow-sm">
+        <aside className="hidden md:flex w-64 flex-col bg-blue-50/70 dark:bg-gray-900/70 backdrop-blur-xl border-r border-blue-100 dark:border-gray-800 shadow-sm">
           {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-1">
             <button
@@ -880,7 +880,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
             {/* STATS — Bento Cards */}
             {/* ============================================ */}
             <div className="grid grid-cols-3 gap-3 md:gap-4">
-              <div className="rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 p-3 md:p-4 shadow-lg dark:shadow-black/50 hover:shadow-xl transition-shadow">
+              <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 p-3 md:p-4 shadow-lg dark:shadow-black/50 hover:shadow-xl transition-shadow">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Retiradas</span>
                   <div className="w-7 h-7 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500">
@@ -890,7 +890,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
                 <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{totalRetiradas}</p>
               </div>
 
-              <div className="rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 p-3 md:p-4 shadow-lg dark:shadow-black/50 hover:shadow-xl transition-shadow">
+              <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 p-3 md:p-4 shadow-lg dark:shadow-black/50 hover:shadow-xl transition-shadow">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Pendientes</span>
                   <div className="w-7 h-7 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center text-yellow-500">
@@ -900,21 +900,21 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
                 <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{totalPendientes}</p>
               </div>
 
-              <div className="rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 p-3 md:p-4 shadow-lg dark:shadow-black/50 hover:shadow-xl transition-shadow">
+              <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 p-3 md:p-4 shadow-lg dark:shadow-black/50 hover:shadow-xl transition-shadow">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Hist. Hoy</span>
                   <div className="w-7 h-7 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-500">
                     <IcoBuilding />
                   </div>
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{historialTotal}</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{historialHoy.length}</p>
         </div>
       </div>
 
             {/* ============================================ */}
             {/* VALIDAR TOKEN — Bento Card */}
             {/* ============================================ */}
-            <div className="rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 p-4 md:p-5 shadow-lg dark:shadow-black/50">
+            <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 p-4 md:p-5 shadow-lg dark:shadow-black/50">
               <label className="block text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-3">
                 Validar Token
               </label>
@@ -955,7 +955,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
             {/* TAB CONTENT */}
             {/* ============================================ */}
             {tabActiva === 'activos' && (
-              <div className="rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
+              <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
                 <div className="px-5 py-4 border-b border-blue-100 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Llaves Activas</h3>
@@ -1082,7 +1082,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
                 </div>
 
                 {subTabHistorial === 'hoy' && (
-                  <div className="rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
+                  <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
                     <div className="px-5 py-4 border-b border-blue-100 dark:border-gray-700">
                       <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
                         Historial de Hoy <span className="text-gray-400 dark:text-gray-500 font-normal">({historialHoy.length})</span>
@@ -1141,7 +1141,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
                     </div>
 
                     {/* Tabla: segundo en DOM (abajo en mobile, izquierda en desktop) */}
-                    <div className="flex-1 rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden md:order-1">
+                    <div className="flex-1 rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden md:order-1">
                       <div className="px-5 py-4 border-b border-blue-100 dark:border-gray-700 flex items-center justify-between">
                         <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
                           Historial del <span className="text-blue-600 dark:text-blue-400">{fechaBusqueda}</span>
@@ -1196,7 +1196,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
             )}
 
             {tabActiva === 'panel' && (
-              <div className="rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-lg dark:shadow-black/50 p-5">
+              <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-lg dark:shadow-black/50 p-5">
                 <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-5">
                   Panel Completo de Llaves
                 </h3>
@@ -1204,7 +1204,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
                   {AULAS.sort().map((aula) => {
                     const activo = registros.find(r => r.numeroAula === aula)
 
-                    let colorStyles = 'bg-white border-green-400 shadow-lg dark:bg-gray-800 dark:border-green-600 dark:shadow-black/50'
+                    let colorStyles = 'bg-blue-50 border-green-400 shadow-lg dark:bg-gray-800 dark:border-green-600 dark:shadow-black/50'
                     let dotColor = 'bg-green-500'
                     let textoEstado = 'Disponible'
                     let nombreSolicitante = ''
@@ -1252,7 +1252,7 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
         {/* ============================================ */}
         {/* MOBILE BOTTOM NAV — iOS-style tab bar */}
         {/* ============================================ */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-blue-100 dark:border-gray-800 pb-4">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-50/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-blue-100 dark:border-gray-800 pb-4">
           <div className="flex">
             {[
               { key: 'activos' as const, label: 'Activos', icon: IcoShield },
@@ -1304,6 +1304,15 @@ function LoginAuditor({ onLogin }: { onLogin: (email: string) => void }) {
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
   const [tokenGenerado, setTokenGenerado] = useState('')
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'))
+
+  const toggleDarkMode = () => {
+    const newMode = !document.documentElement.classList.contains('dark')
+    if (newMode) document.documentElement.classList.add('dark')
+    else document.documentElement.classList.remove('dark')
+    localStorage.setItem('darkMode', String(newMode))
+    setDarkMode(newMode)
+  }
 
   const enviarCodigo = async () => {
     if (!email.trim()) {
@@ -1349,19 +1358,36 @@ function LoginAuditor({ onLogin }: { onLogin: (email: string) => void }) {
     <div className="min-h-screen bg-gradient-to-br from-blue-200 via-sky-100 to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
       <div className="max-w-sm w-full">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.location.href = '/'}
+              className="w-10 h-10 rounded-2xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:shadow-md transition"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">Acceso Auditor</h1>
+          </div>
           <button
-            onClick={() => window.location.href = '/'}
-            className="w-10 h-10 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:shadow-md transition"
+            onClick={toggleDarkMode}
+            className="w-9 h-9 rounded-xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
+            title={darkMode ? 'Modo Claro' : 'Modo Oscuro'}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
+            {darkMode ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+              </svg>
+            )}
           </button>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Acceso Auditor</h1>
         </div>
 
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-6 space-y-5 shadow-lg">
+        <div className="bg-blue-50/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-6 space-y-5 shadow-lg">
           {!tokenEnviado ? (
             <>
               {/* Paso 1: Email */}
@@ -1472,10 +1498,9 @@ function DashboardAuditor({ auditorEmail, onVolver }: { auditorEmail: string; on
     document.documentElement.classList.toggle('dark', newMode)
   }
 
-  // Unir activos + historial en una sola lista para vista unificada
-  const todosLosRegistros = [...registros, ...historialRegistros].sort(
-    (a, b) => (b.timestamp || '').localeCompare(a.timestamp || '')
-  )
+  // Separar activos (pendientes + retiradas) e historial (devueltas)
+  const activos = [...registros].filter(r => r.estado === 'pendiente' || r.estado === 'retirada')
+  const historialSolo = [...historialRegistros].filter(r => r.estado === 'devuelta')
   const IcoChevronLeft = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -1495,7 +1520,7 @@ function DashboardAuditor({ auditorEmail, onVolver }: { auditorEmail: string; on
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-200 via-sky-100 to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       {/* HEADER */}
-      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-blue-100 dark:border-gray-800 px-4 md:px-6 py-2.5 flex items-center justify-between z-10 shadow-sm">
+      <header className="bg-blue-50/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-blue-100 dark:border-gray-800 px-4 md:px-6 py-2.5 flex items-center justify-between z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={onVolver} className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition">
             <IcoChevronLeft />
@@ -1526,70 +1551,109 @@ function DashboardAuditor({ auditorEmail, onVolver }: { auditorEmail: string; on
         </div>
       </header>
 
-      {/* BODY: Simplified — Unified single view */}
+      {/* BODY: Two tables side by side — Activas + Historial */}
       <main className="flex-1 overflow-auto">
         <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-          <div className="rounded-2xl bg-white/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
-            <div className="px-5 py-4 border-b border-blue-100 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
-                Registro completo <span className="text-gray-400 dark:text-gray-500 font-normal">({todosLosRegistros.length})</span>
-              </h3>
-            </div>
-            <div className="overflow-x-auto max-h-[calc(100vh-220px)]">
-              <table className="w-full text-sm">
-                <thead className="bg-blue-50/50 dark:bg-gray-900/50 sticky top-0">
-                  <tr>
-                    <th className="text-left px-4 py-3 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Fecha</th>
-                    <th className="text-left px-4 py-3 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Aula</th>
-                    <th className="text-left px-4 py-3 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Docente</th>
-                    <th className="text-left px-4 py-3 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Email</th>
-                    <th className="text-left px-4 py-3 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {todosLosRegistros.length === 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            {/* LEFT: Llaves activas */}
+            <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
+              <div className="px-5 py-4 border-b border-indigo-200 dark:border-indigo-900/30 flex items-center justify-between bg-indigo-50/30 dark:bg-indigo-900/5">
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                  Activas
+                  <span className="text-gray-400 dark:text-gray-500 font-normal">({activos.length})</span>
+                </h3>
+              </div>
+              <div className="overflow-y-auto max-h-[calc(100vh-260px)]">
+                <table className="w-full text-sm">
+                  <thead className="bg-indigo-50/50 dark:bg-indigo-900/10 sticky top-0">
                     <tr>
-                      <td colSpan={5} className="px-4 py-12 text-center text-blue-400 dark:text-blue-500 text-sm">
-                        No hay registros para este auditor
-                      </td>
+                      <th className="text-left px-4 py-2.5 font-semibold text-indigo-700 dark:text-indigo-300 uppercase text-[11px] tracking-wider">Aula</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-indigo-700 dark:text-indigo-300 uppercase text-[11px] tracking-wider">Docente</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-indigo-700 dark:text-indigo-300 uppercase text-[11px] tracking-wider">Estado</th>
                     </tr>
-                  ) : (
-                    todosLosRegistros.map((reg) => (
-                      <tr key={reg.id} className={`transition ${
-                        reg.estado === 'pendiente' ? 'bg-yellow-50/70 dark:bg-yellow-900/10' :
-                        reg.estado === 'retirada' ? 'bg-red-50/30 dark:bg-red-900/5' :
-                        'hover:bg-blue-50/30 dark:hover:bg-blue-950/20'
-                      }`}>
-                        <td className="px-4 py-3 text-blue-400 dark:text-blue-400 text-xs whitespace-nowrap">
-                          {new Date(reg.timestamp).toLocaleDateString([], { day: '2-digit', month: '2-digit' })}
-                          <span className="mx-1 text-blue-300">·</span>
-                          {new Date(reg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </td>
-                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{reg.numeroAula}</td>
-                        <td className="px-4 py-3 text-blue-700 dark:text-blue-300">{reg.nombre}</td>
-                        <td className="px-4 py-3 text-blue-400 dark:text-blue-400 text-xs">{reg.email}</td>
-                        <td className="px-4 py-3">
-                          {reg.estado === 'pendiente' ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
-                              <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-                              Pendiente
-                            </span>
-                          ) : reg.estado === 'retirada' ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
-                              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                              En uso
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />Devuelta
-                            </span>
-                          )}
+                  </thead>
+                  <tbody>
+                    {activos.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-12 text-center text-blue-400 dark:text-blue-500 text-sm">
+                          No hay llaves activas
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      activos.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || '')).map((reg) => (
+                        <tr key={reg.id} className={`transition ${
+                          reg.estado === 'pendiente' ? 'bg-yellow-50/70 dark:bg-yellow-900/10' :
+                          'bg-red-50/30 dark:bg-red-900/5'
+                        }`}>
+                          <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{reg.numeroAula}</td>
+                          <td className="px-4 py-3">
+                            <div className="text-blue-700 dark:text-blue-300 text-sm">{reg.nombre}</div>
+                            <div className="text-blue-400 dark:text-blue-500 text-[10px]">{reg.email}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            {reg.estado === 'pendiente' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+                                Pendiente
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                En uso
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* RIGHT: Historial */}
+            <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
+              <div className="px-5 py-4 border-b border-blue-100 dark:border-gray-700 flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500" />
+                  Historial
+                  <span className="text-gray-400 dark:text-gray-500 font-normal">({historialSolo.length})</span>
+                </h3>
+              </div>
+              <div className="overflow-y-auto max-h-[calc(100vh-260px)]">
+                <table className="w-full text-sm">
+                  <thead className="bg-blue-50/50 dark:bg-gray-900/50 sticky top-0">
+                    <tr>
+                      <th className="text-left px-4 py-2.5 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Fecha</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Aula</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Docente</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-blue-600 dark:text-blue-400 uppercase text-[11px] tracking-wider">Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historialSolo.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-12 text-center text-blue-400 dark:text-blue-500 text-sm">
+                          No hay devoluciones aún
+                        </td>
+                      </tr>
+                    ) : (
+                      historialSolo.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || '')).map((reg) => (
+                        <tr key={reg.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition">
+                          <td className="px-4 py-3 text-blue-400 dark:text-blue-400 text-xs whitespace-nowrap">
+                            {new Date(reg.timestamp).toLocaleDateString([], { day: '2-digit', month: '2-digit' })}
+                            <span className="mx-1 text-blue-300">·</span>
+                            {new Date(reg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{reg.numeroAula}</td>
+                          <td className="px-4 py-3 text-blue-700 dark:text-blue-300">{reg.nombre}</td>
+                          <td className="px-4 py-3 text-blue-400 dark:text-blue-400 text-xs">{reg.email}</td>
+                        </tr>
+                    )))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -1630,7 +1694,7 @@ function LoginSeguridad({ onLogin }: { onLogin: (idGuardia: string) => void }) {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => window.location.reload()}
-            className="w-10 h-10 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:shadow-md transition"
+            className="w-10 h-10 rounded-2xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:shadow-md transition"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -1639,7 +1703,7 @@ function LoginSeguridad({ onLogin }: { onLogin: (idGuardia: string) => void }) {
           <h1 className="text-lg font-bold text-gray-900 dark:text-white">Acceso Seguridad</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-6 space-y-5 shadow-lg">
+        <form onSubmit={handleSubmit} className="bg-blue-50/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-6 space-y-5 shadow-lg">
           <div>
             <label className="block text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Número de Guardia / ID</label>
             <input
