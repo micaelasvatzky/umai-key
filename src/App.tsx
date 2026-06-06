@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { guardarSolicitud, subscribeRegistros, subscribeHistorial, validarTokenEnFirebase, marcarDevolucion, generarTokenAuditor, verificarTokenAuditor, enviarTokenPorEmail, FORMSPREE_ID, type Registro } from './firebase'
+import { guardarSolicitud, subscribeRegistros, subscribeHistorial, validarTokenEnFirebase, marcarDevolucion, generarTokenAuditor, verificarTokenAuditor, enviarTokenPorEmail, type Registro } from './firebase'
 import resourcesData from '../resources.json'
 
 // ============================================
@@ -722,7 +722,6 @@ function DashboardSeguridad({ idGuardia, onVolver }: { idGuardia: string; onVolv
 
   const totalRetiradas = registros.filter(r => r.estado === 'retirada').length
   const totalPendientes = registros.filter(r => r.estado === 'pendiente').length
-  const historialTotal = historialRegistros.length
   const hoyStr = new Date().toISOString().split('T')[0]
   const historialHoy = historialRegistros.filter(r => r.fechaDevolucion?.startsWith(hoyStr))
   const historialBusqueda = historialRegistros.filter(r => r.fechaDevolucion?.startsWith(fechaBusqueda))
