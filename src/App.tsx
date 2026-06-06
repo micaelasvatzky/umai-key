@@ -1670,6 +1670,15 @@ function LoginSeguridad({ onLogin }: { onLogin: (idGuardia: string) => void }) {
   const [idGuardia, setIdGuardia] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState('')
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'))
+
+  const toggleDarkMode = () => {
+    const newMode = !document.documentElement.classList.contains('dark')
+    if (newMode) document.documentElement.classList.add('dark')
+    else document.documentElement.classList.remove('dark')
+    localStorage.setItem('darkMode', String(newMode))
+    setDarkMode(newMode)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -1690,16 +1699,34 @@ function LoginSeguridad({ onLogin }: { onLogin: (idGuardia: string) => void }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-200 via-sky-100 to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
       <div className="max-w-sm w-full">
-        <div className="flex items-center gap-3 mb-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-10 h-10 rounded-2xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:shadow-md transition"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">Acceso Seguridad</h1>
+          </div>
           <button
-            onClick={() => window.location.reload()}
-            className="w-10 h-10 rounded-2xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm hover:shadow-md transition"
+            onClick={toggleDarkMode}
+            className="w-9 h-9 rounded-xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
+            title={darkMode ? 'Modo Claro' : 'Modo Oscuro'}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
+            {darkMode ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+              </svg>
+            )}
           </button>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Acceso Seguridad</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-blue-50/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-100 dark:border-gray-700 rounded-3xl p-6 space-y-5 shadow-lg">
