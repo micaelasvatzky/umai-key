@@ -329,7 +329,8 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
           </div>
 
           <div>
-            <label className="block text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Email institucional</label>
+            <label className="block text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Email institucional</label>
+            <p className="text-[10px] text-blue-400 dark:text-blue-500 mb-2">@maimonides.edu o @maimonidesvirtual.com.ar</p>
             <input
               type="email"
               required
@@ -1391,7 +1392,8 @@ function LoginAuditor({ onLogin }: { onLogin: (email: string) => void }) {
             <>
               {/* Paso 1: Email */}
               <div>
-                <label className="block text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Email institucional</label>
+                <label className="block text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Email institucional</label>
+                <p className="text-[10px] text-blue-400 dark:text-blue-500 mb-2">@maimonides.edu o @maimonidesvirtual.com.ar</p>
                 <input
                   type="email"
                   required
