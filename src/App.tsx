@@ -224,7 +224,7 @@ function FormularioDocente({ onVolver }: { onVolver: () => void }) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-200 via-sky-100 to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
         <div className="max-w-sm w-full relative">
-          <div className="absolute -top-2 right-0 z-10">
+          <div className="absolute -top-14 right-0 z-10">
             <button
               onClick={toggleFormDark}
               className="w-9 h-9 rounded-xl bg-blue-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg hover:shadow-xl transition-all"
@@ -1553,19 +1553,19 @@ function DashboardAuditor({ auditorEmail, onVolver }: { auditorEmail: string; on
       </header>
 
       {/* BODY: Two tables side by side — Activas + Historial */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+      <main className="flex-1 min-h-0 flex flex-col">
+        <div className="p-4 md:p-8 w-full flex-1 min-h-0 overflow-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 h-full min-h-0">
             {/* LEFT: Llaves activas */}
-            <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
-              <div className="px-5 py-4 border-b border-indigo-200 dark:border-indigo-900/30 flex items-center justify-between bg-indigo-50/30 dark:bg-indigo-900/5">
+            <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden flex flex-col min-h-0">
+              <div className="px-5 py-4 border-b border-indigo-200 dark:border-indigo-900/30 flex items-center justify-between bg-indigo-50/30 dark:bg-indigo-900/5 shrink-0">
                 <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-indigo-500" />
                   Activas
                   <span className="text-gray-400 dark:text-gray-500 font-normal">({activos.length})</span>
                 </h3>
               </div>
-              <div className="overflow-y-auto max-h-[calc(100vh-260px)]">
+              <div className="overflow-y-auto flex-1 min-h-0">
                 <table className="w-full text-sm">
                   <thead className="bg-indigo-50/50 dark:bg-indigo-900/10 sticky top-0">
                     <tr>
@@ -1614,15 +1614,15 @@ function DashboardAuditor({ auditorEmail, onVolver }: { auditorEmail: string; on
             </div>
 
             {/* RIGHT: Historial */}
-            <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden">
-              <div className="px-5 py-4 border-b border-blue-100 dark:border-gray-700 flex items-center justify-between">
+            <div className="rounded-2xl bg-blue-50/80 backdrop-blur-xl dark:bg-gray-800/80 border border-blue-100 dark:border-gray-700 shadow-xl dark:shadow-black/50 overflow-hidden flex flex-col min-h-0">
+              <div className="px-5 py-4 border-b border-blue-100 dark:border-gray-700 flex items-center justify-between shrink-0">
                 <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500" />
                   Historial
                   <span className="text-gray-400 dark:text-gray-500 font-normal">({historialSolo.length})</span>
                 </h3>
               </div>
-              <div className="overflow-y-auto max-h-[calc(100vh-260px)]">
+              <div className="overflow-y-auto flex-1 min-h-0">
                 <table className="w-full text-sm">
                   <thead className="bg-blue-50/50 dark:bg-gray-900/50 sticky top-0">
                     <tr>
